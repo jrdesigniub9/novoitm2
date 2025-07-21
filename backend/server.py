@@ -399,7 +399,7 @@ async def get_evolution_instance_status(instance_name: str):
         return {"state": "disconnected"}
 
 async def send_evolution_message(instance_name: str, recipient: str, message_data: Dict[str, Any]):
-    """Send message through Evolution API"""
+    """Send message through Evolution API following official documentation"""
     headers = {
         "apikey": EVOLUTION_API_KEY,
         "Content-Type": "application/json"
@@ -408,29 +408,60 @@ async def send_evolution_message(instance_name: str, recipient: str, message_dat
     try:
         if message_data["type"] == "text":
             endpoint = f"{EVOLUTION_API_URL}/message/sendText/{instance_name}"
+            # Correct payload structure according to Evolution API docs
             payload = {
                 "number": recipient,
-                "textMessage": {
-                    "text": message_data["content"]
-                }
+                "text": message_data["content"]
             }
+            
         elif message_data["type"] == "media":
             endpoint = f"{EVOLUTION_API_URL}/message/sendMedia/{instance_name}"
+            # Correct payload structure according to Evolution API docs
+            media_type = message_data.get("mediaType", "image")
             payload = {
                 "number": recipient,
-                "mediaMessage": {
-                    "mediaType": message_data.get("mediaType", "image"),
-                    "media": message_data["content"],
-                    "caption": message_data.get("caption", "")
-                }
+                "mediatype": media_type,  # image, video or document
+                "media": message_data["content"],  # url or base64
+                "caption": message_data.get("caption", ""),
+                "fileName": message_data.get("fileName", f"media.{media_type}")
             }
+            
+            # Set mimetype based on media type
+            if media_type == "image":
+                payload["mimetype"] = message_data.get("mimetype", "image/png")
+            elif media_type == "video":
+                payload["mimetype"] = message_data.get("mimetype", "video/mp4")
+            elif media_type == "document":
+                payload["mimetype"] = message_data.get("mimetype", "application/pdf")
+            else:
+                payload["mimetype"] = message_data.get("mimetype", "application/octet-stream")
+                
+        elif message_data["type"] == "audio":
+            endpoint = f"{EVOLUTION_API_URL}/message/sendWhatsAppAudio/{instance_name}"
+            payload = {
+                "number": recipient,
+                "audio": message_data["content"]  # url or base64
+            }
+            
         else:
             raise ValueError(f"Unsupported message type: {message_data['type']}")
         
+        logging.info(f"Sending Evolution API request to {endpoint} with payload: {json.dumps(payload, indent=2)}")
         response = requests.post(endpoint, headers=headers, json=payload)
-        return response.json()
+        logging.info(f"Evolution API response: {response.status_code} - {response.text}")
+        
+        if response.status_code == 200 or response.status_code == 201:
+            return response.json()
+        else:
+            logging.error(f"Evolution API error: {response.status_code} - {response.text}")
+            raise HTTPException(status_code=response.status_code, detail=f"Evolution API error: {response.text}")
+            
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Request failed to Evolution API: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to send message: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to send message: {str(e)}")
+        logging.error(f"Unexpected error sending message: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to send message: {str(e)}")
 
 # AI Helper Functions
 async def analyze_sentiment(text: str) -> Dict[str, float]:
