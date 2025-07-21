@@ -162,15 +162,18 @@ frontend:
 
   - task: "Instance Management Modal Enhancement"
     implemented: true
-    working: "NA"
-    file: "App.js"
+    working: true
+    file: "App.js, server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "ENHANCED: Improved InstanceModal with better error handling, proper instance display with fallback for empty lists, and better handling of instance data structure."
+      - working: true
+        agent: "main"
+        comment: "FIXED CRITICAL BUG: Corrected backend API mapping in get_instances() function. Evolution API returns 'name' field but code was looking for 'instanceName'. Fixed line 742 in server.py to use evo_inst.get('name') instead of evo_inst.get('instanceName'). Also updated to use connectionStatus directly and proper Evolution API field mappings. Instance management modal now correctly displays all instances from Evolution API."
 
   - task: "AI Settings Simplification"
     implemented: true
