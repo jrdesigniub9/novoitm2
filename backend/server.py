@@ -146,55 +146,74 @@ async def create_evolution_instance(instance_name: str, webhook_url: str = None)
         "alwaysOnline": True,
         "readMessages": False,
         "readStatus": False,
-        "syncFullHistory": False,
-        # Webhook Configuration with MESSAGES_UPSERT enabled
-        "webhook": {
-            "enabled": True,
-            "url": webhook_url,
-            "byEvents": False,
-            "base64": True,
-            "headers": {
-                "authorization": f"Bearer {EVOLUTION_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            "events": [
-                "APPLICATION_STARTUP",
-                "QRCODE_UPDATED", 
-                "MESSAGES_SET",
-                "MESSAGES_UPSERT",  # This is critical for receiving incoming messages
-                "MESSAGES_UPDATE",
-                "MESSAGES_DELETE",
-                "SEND_MESSAGE",
-                "CONTACTS_SET",
-                "CONTACTS_UPSERT",
-                "CONTACTS_UPDATE",
-                "PRESENCE_UPDATE",
-                "CHATS_SET",
-                "CHATS_UPSERT",
-                "CHATS_UPDATE",
-                "CHATS_DELETE",
-                "GROUPS_UPSERT",
-                "GROUP_UPDATE",
-                "GROUP_PARTICIPANTS_UPDATE",
-                "CONNECTION_UPDATE",
-                "LABELS_EDIT",
-                "LABELS_ASSOCIATION",
-                "CALL",
-                "TYPEBOT_START",
-                "TYPEBOT_CHANGE_STATUS"
-            ]
-        }
+        "syncFullHistory": False
     }
     
     try:
+        # First, create the instance
         response = requests.post(
             f"{EVOLUTION_API_URL}/instance/create",
             headers=headers,
             json=payload
         )
         logging.info(f"Evolution API create instance response: {response.status_code} - {response.text}")
+        
         if response.status_code == 201 or response.status_code == 200:
-            return response.json()
+            instance_data = response.json()
+            
+            # Now set the webhook configuration separately
+            webhook_payload = {
+                "webhook": {
+                    "enabled": True,
+                    "url": webhook_url,
+                    "byEvents": False,
+                    "base64": True,
+                    "headers": {
+                        "authorization": f"Bearer {EVOLUTION_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    "events": [
+                        "APPLICATION_STARTUP",
+                        "QRCODE_UPDATED", 
+                        "MESSAGES_SET",
+                        "MESSAGES_UPSERT",  # This is critical for receiving incoming messages
+                        "MESSAGES_UPDATE",
+                        "MESSAGES_DELETE",
+                        "SEND_MESSAGE",
+                        "CONTACTS_SET",
+                        "CONTACTS_UPSERT",
+                        "CONTACTS_UPDATE",
+                        "PRESENCE_UPDATE",
+                        "CHATS_SET",
+                        "CHATS_UPSERT",
+                        "CHATS_UPDATE",
+                        "CHATS_DELETE",
+                        "GROUPS_UPSERT",
+                        "GROUP_UPDATE",
+                        "GROUP_PARTICIPANTS_UPDATE",
+                        "CONNECTION_UPDATE",
+                        "LABELS_EDIT",
+                        "LABELS_ASSOCIATION",
+                        "CALL",
+                        "TYPEBOT_START",
+                        "TYPEBOT_CHANGE_STATUS"
+                    ]
+                }
+            }
+            
+            # Set webhook configuration
+            webhook_response = requests.post(
+                f"{EVOLUTION_API_URL}/webhook/set/{instance_name}",
+                headers=headers,
+                json=webhook_payload
+            )
+            
+            if webhook_response.status_code == 200 or webhook_response.status_code == 201:
+                logging.info(f"Webhook configured successfully for instance {instance_name}: {webhook_response.text}")
+            else:
+                logging.warning(f"Failed to configure webhook for instance {instance_name}: {webhook_response.status_code} - {webhook_response.text}")
+            
+            return instance_data
         else:
             raise HTTPException(status_code=response.status_code, detail=f"Evolution API error: {response.text}")
     except requests.exceptions.RequestException as e:
