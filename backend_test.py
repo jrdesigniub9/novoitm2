@@ -14,7 +14,7 @@ from typing import Dict, Any, List
 import os
 
 # Configuration
-BACKEND_URL = "https://969fa30c-918e-4a0c-a68d-484307aa5010.preview.emergentagent.com/api"
+BACKEND_URL = "https://c44aa712-8cd0-4523-921f-e3523a9c7602.preview.emergentagent.com/api"
 EVOLUTION_API_URL = "http://apiwhatsapp.maapletech.com.br"
 EVOLUTION_API_KEY = "322683C4C655415CAAFFFE10F7D57E11"
 
