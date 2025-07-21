@@ -1391,12 +1391,18 @@ const AISettingsModal = ({ settings, onClose, onSave }) => {
 function App() {
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' or 'flowbuilder'
   const [instances, setInstances] = useState([]);
+  const [flowToLoad, setFlowToLoad] = useState(null);
+
+  const handleOpenFlowBuilder = (flow = null) => {
+    setFlowToLoad(flow);
+    setCurrentView('flowbuilder');
+  };
 
   return (
     <div className="App">
       {currentView === 'dashboard' ? (
         <Dashboard 
-          onOpenFlowBuilder={() => setCurrentView('flowbuilder')}
+          onOpenFlowBuilder={handleOpenFlowBuilder}
           instances={instances}
           setInstances={setInstances}
         />
@@ -1405,6 +1411,7 @@ function App() {
           onBackToDashboard={() => setCurrentView('dashboard')}
           instances={instances}
           setInstances={setInstances}
+          flowToLoad={flowToLoad}
         />
       )}
     </div>
