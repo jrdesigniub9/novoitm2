@@ -287,6 +287,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ COMPREHENSIVE TESTING PASSED: Successfully created WhatsApp instance test_instance_1753118816, retrieved instance list (found 2 total instances), and obtained QR codes for connection. Instance management fully functional with proper Evolution API integration and MongoDB storage."
+      - working: true
+        agent: "testing"
+        comment: "✅ INSTANCE MANAGEMENT RE-TESTED - FULLY OPERATIONAL: Conducted comprehensive re-testing of GET /api/evolution/instances endpoint as requested for instance management modal fix. Successfully created new test instance (test_instance_1753126060), verified instance listing functionality, and confirmed QR code retrieval system. Instance management API returns properly formatted data structure for frontend modal display. All instance management functionality is production-ready."
 
   - task: "Webhook Processing"
     implemented: true
