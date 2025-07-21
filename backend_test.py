@@ -485,9 +485,223 @@ class BackendTester:
         except Exception as e:
             self.log_result("Get AI Responses", False, f"Error: {str(e)}")
 
+    def test_corrected_webhook_and_flow_instance_integration(self):
+        """Test Corrected Webhook System and Flow-Instance Integration - CRITICAL PRIORITY"""
+        print("\n=== Testing Corrected Webhook System and Flow-Instance Integration ===")
+        print("🎯 FOCUS: Testing webhook URL correction and flow-to-instance association")
+        
+        # First, create a test instance for flow association
+        test_flow_instance = f"flow_test_{int(time.time())}"
+        
+        # Test 1: Instance Creation with Correct Webhook URL
+        print("\n1️⃣ Testing Instance Creation with Correct Webhook URL")
+        try:
+            data = {"instance_name": test_flow_instance}
+            response = self.session.post(f"{BACKEND_URL}/evolution/instances", data=data)
+            
+            if response.status_code == 200:
+                instance = response.json()
+                self.created_instances.append(test_flow_instance)
+                self.log_result("Instance Creation with Correct Webhook", True, 
+                              f"Instance: {instance['instanceName']}")
+                
+                # Verify webhook URL is correctly configured by checking Evolution API directly
+                headers = {"apikey": EVOLUTION_API_KEY}
+                evo_response = requests.get(f"{EVOLUTION_API_URL}/instance/fetchInstances", headers=headers)
+                
+                if evo_response.status_code == 200:
+                    evo_instances = evo_response.json()
+                    webhook_verified = False
+                    
+                    for evo_inst in evo_instances:
+                        if evo_inst.get("name") == test_flow_instance:
+                            # Check if webhook URL contains the correct backend URL
+                            webhook_config = evo_inst.get("webhook", {})
+                            webhook_url = webhook_config.get("url", "")
+                            expected_webhook = "https://159d4228-a9ef-4d1b-9460-914863a370f4.preview.emergentagent.com/api/webhook/evolution"
+                            
+                            if webhook_url == expected_webhook:
+                                webhook_verified = True
+                                print(f"   ✅ Webhook URL correctly configured: {webhook_url}")
+                                print(f"   ✅ MESSAGES_UPSERT enabled: {'MESSAGES_UPSERT' in webhook_config.get('events', [])}")
+                            else:
+                                print(f"   ❌ Webhook URL incorrect: {webhook_url}")
+                                print(f"   ❌ Expected: {expected_webhook}")
+                            break
+                    
+                    self.log_result("Webhook URL Verification", webhook_verified, 
+                                  f"Webhook URL {'correct' if webhook_verified else 'incorrect'}")
+                else:
+                    self.log_result("Webhook URL Verification", False, "Could not verify webhook URL")
+                    
+            else:
+                self.log_result("Instance Creation with Correct Webhook", False, 
+                              f"Status: {response.status_code}, Response: {response.text}")
+                return False
+        except Exception as e:
+            self.log_result("Instance Creation with Correct Webhook", False, f"Error: {str(e)}")
+            return False
+        
+        # Test 2: Flow Creation with Instance Selection
+        print("\n2️⃣ Testing Flow Creation with Instance Selection")
+        try:
+            flow_with_instance_data = {
+                "name": "Instance-Specific Marketing Flow",
+                "description": "Flow assigned to specific WhatsApp instance",
+                "selectedInstance": test_flow_instance,  # This is the key new field
+                "nodes": [
+                    {
+                        "id": "trigger-instance",
+                        "type": "trigger",
+                        "position": {"x": 100, "y": 100},
+                        "data": {
+                            "label": "Instance Trigger",
+                            "triggerType": "keyword",
+                            "keywords": ["promo", "oferta", "desconto"]
+                        }
+                    },
+                    {
+                        "id": "message-instance",
+                        "type": "message",
+                        "position": {"x": 300, "y": 100},
+                        "data": {"message": f"Mensagem específica para instância {test_flow_instance}! 🎯"}
+                    }
+                ],
+                "edges": [
+                    {
+                        "id": "e-trigger-message",
+                        "source": "trigger-instance",
+                        "target": "message-instance"
+                    }
+                ],
+                "isActive": True
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/flows", json=flow_with_instance_data)
+            if response.status_code == 200:
+                created_flow = response.json()
+                flow_id = created_flow["id"]
+                self.created_flows.append(flow_id)
+                
+                # Verify selectedInstance field is properly saved
+                selected_instance = created_flow.get("selectedInstance")
+                if selected_instance == test_flow_instance:
+                    self.log_result("Flow Creation with Instance Selection", True, 
+                                  f"Flow ID: {flow_id}, Selected Instance: {selected_instance}")
+                    print(f"   ✅ Flow successfully associated with instance: {selected_instance}")
+                else:
+                    self.log_result("Flow Creation with Instance Selection", False, 
+                                  f"selectedInstance field not saved correctly: {selected_instance}")
+            else:
+                self.log_result("Flow Creation with Instance Selection", False, 
+                              f"Status: {response.status_code}, Response: {response.text}")
+                return False
+        except Exception as e:
+            self.log_result("Flow Creation with Instance Selection", False, f"Error: {str(e)}")
+            return False
+        
+        # Test 3: Flow-Instance Association Verification
+        print("\n3️⃣ Testing Flow-Instance Association")
+        try:
+            # Get the created flow and verify association
+            response = self.session.get(f"{BACKEND_URL}/flows/{flow_id}")
+            if response.status_code == 200:
+                flow = response.json()
+                selected_instance = flow.get("selectedInstance")
+                
+                if selected_instance == test_flow_instance:
+                    self.log_result("Flow-Instance Association", True, 
+                                  f"Flow correctly associated with instance: {selected_instance}")
+                    print(f"   ✅ Flow '{flow['name']}' is associated with instance '{selected_instance}'")
+                    print(f"   ✅ Flow is active: {flow.get('isActive', False)}")
+                    print(f"   ✅ Flow has trigger nodes: {len([n for n in flow.get('nodes', []) if n.get('type') == 'trigger'])}")
+                else:
+                    self.log_result("Flow-Instance Association", False, 
+                                  f"Association incorrect: {selected_instance}")
+            else:
+                self.log_result("Flow-Instance Association", False, f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Flow-Instance Association", False, f"Error: {str(e)}")
+        
+        # Test 4: Smart Webhook Processing with Instance-Specific Flow Triggering
+        print("\n4️⃣ Testing Smart Webhook Processing with Instance-Specific Flow Triggering")
+        try:
+            # Test webhook with MESSAGES_UPSERT event that should trigger the instance-specific flow
+            webhook_test_data = {
+                "event": "MESSAGES_UPSERT",
+                "instance": test_flow_instance,  # Message comes from our test instance
+                "data": {
+                    "messages": [{
+                        "key": {
+                            "remoteJid": "5511987654321@s.whatsapp.net",
+                            "fromMe": False,
+                            "id": "test_flow_trigger_message"
+                        },
+                        "message": {
+                            "conversation": "promo"  # This should trigger our flow
+                        }
+                    }]
+                }
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/webhook/evolution", json=webhook_test_data)
+            if response.status_code == 200:
+                result = response.json()
+                self.log_result("Smart Webhook Processing", True, 
+                              f"Webhook response: {result.get('status', 'unknown')}")
+                print(f"   ✅ Webhook processed MESSAGES_UPSERT event")
+                print(f"   ✅ Message from instance '{test_flow_instance}' processed")
+                print(f"   ✅ Flow trigger keyword 'promo' should activate instance-specific flow")
+            else:
+                self.log_result("Smart Webhook Processing", False, 
+                              f"Status: {response.status_code}, Response: {response.text}")
+        except Exception as e:
+            self.log_result("Smart Webhook Processing", False, f"Error: {str(e)}")
+        
+        # Test 5: Automatic Flow Execution Verification
+        print("\n5️⃣ Testing Automatic Flow Execution")
+        try:
+            # Wait a moment for flow processing
+            time.sleep(2)
+            
+            # Test with a different instance to verify flow isolation
+            different_instance = f"other_test_{int(time.time())}"
+            
+            webhook_different_instance = {
+                "event": "MESSAGES_UPSERT", 
+                "instance": different_instance,  # Different instance
+                "data": {
+                    "messages": [{
+                        "key": {
+                            "remoteJid": "5511111111111@s.whatsapp.net",
+                            "fromMe": False,
+                            "id": "test_different_instance"
+                        },
+                        "message": {
+                            "conversation": "promo"  # Same keyword but different instance
+                        }
+                    }]
+                }
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/webhook/evolution", json=webhook_different_instance)
+            if response.status_code == 200:
+                result = response.json()
+                self.log_result("Flow Instance Isolation", True, 
+                              f"Different instance processed: {result.get('status', 'unknown')}")
+                print(f"   ✅ Message from different instance '{different_instance}' processed")
+                print(f"   ✅ Flow should NOT trigger for different instance (isolation working)")
+            else:
+                self.log_result("Flow Instance Isolation", False, 
+                              f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Flow Instance Isolation", False, f"Error: {str(e)}")
+        
+        return True
+
     def test_webhook_processing(self):
-        """Test Webhook Processing with AI Integration"""
-        print("\n=== Testing Webhook Processing with AI ===")
+        """Test Legacy Webhook Processing with AI Integration"""
+        print("\n=== Testing Legacy Webhook Processing with AI ===")
         
         # Test webhook with QR code update
         webhook_data = {
