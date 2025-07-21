@@ -730,6 +730,33 @@ function FlowBuilder({ onBackToDashboard, instances, setInstances, flowToLoad })
           </div>
         </div>
 
+        {/* Configurações do Fluxo */}
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-3 text-gray-700">Configurações</h3>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Instância WhatsApp
+              </label>
+              <select
+                value={selectedInstance}
+                onChange={(e) => setSelectedInstance(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Qualquer instância</option>
+                {instances.filter(i => i.status === 'open').map((instance) => (
+                  <option key={instance.instanceName || instance.name} value={instance.instanceName || instance.name}>
+                    {instance.instanceName || instance.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Selecione qual conta WhatsApp este fluxo deve usar
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Actions */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-3 text-gray-700">Ações</h3>
