@@ -436,6 +436,7 @@ function FlowBuilder({ onBackToDashboard, instances, setInstances, flowToLoad })
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [flows, setFlows] = useState([]);
   const [currentFlow, setCurrentFlow] = useState(null);
+  const [selectedInstance, setSelectedInstance] = useState(''); // Instância WhatsApp selecionada para este fluxo
   const [selectedNode, setSelectedNode] = useState(null);
   const [showInstanceModal, setShowInstanceModal] = useState(false);
   const [showExecuteModal, setShowExecuteModal] = useState(false);
