@@ -78,6 +78,7 @@ class FlowCreate(BaseModel):
     description: Optional[str] = ""
     nodes: List[FlowNode] = []
     edges: List[FlowEdge] = []
+    selectedInstance: Optional[str] = None  # WhatsApp instance to use for this flow
 
 class FlowUpdate(BaseModel):
     name: Optional[str] = None
