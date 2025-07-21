@@ -26,3 +26,6 @@ typer>=0.9.0
 aiofiles>=24.1.0
 openai>=1.50.0
 textblob>=0.18.0
+httpx>=0.25.0
+distro>=1.8.0
+nltk>=3.8.1
