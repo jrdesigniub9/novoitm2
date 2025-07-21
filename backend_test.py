@@ -485,16 +485,46 @@ class BackendTester:
         except Exception as e:
             self.log_result("Get AI Responses", False, f"Error: {str(e)}")
 
-    def test_corrected_webhook_and_flow_instance_integration(self):
-        """Test Corrected Webhook System and Flow-Instance Integration - CRITICAL PRIORITY"""
-        print("\n=== Testing Corrected Webhook System and Flow-Instance Integration ===")
-        print("🎯 FOCUS: Testing webhook URL correction and flow-to-instance association")
+    def test_webhook_configuration_and_instance_selection(self):
+        """Test Webhook Configuration and Instance Selection - CRITICAL PRIORITY"""
+        print("\n=== Testing Webhook Configuration and Instance Selection ===")
+        print("🎯 FOCUS: Testing WEBHOOK_BASE_URL configuration and selectedInstance functionality")
         
-        # First, create a test instance for flow association
-        test_flow_instance = f"flow_test_{int(time.time())}"
+        # Test 1: Verify WEBHOOK_BASE_URL Configuration
+        print("\n1️⃣ Testing WEBHOOK_BASE_URL Configuration")
+        try:
+            # Check if webhook endpoint is accessible
+            response = self.session.get(f"{BACKEND_URL}/")
+            if response.status_code == 200:
+                self.log_result("Backend API Accessibility", True, "Backend API is accessible")
+                
+                # Verify the webhook endpoint exists
+                webhook_test_data = {
+                    "event": "connection.update",
+                    "instance": "test_webhook_config",
+                    "data": {"state": "connecting"}
+                }
+                
+                webhook_response = self.session.post(f"{BACKEND_URL}/webhook/evolution", json=webhook_test_data)
+                if webhook_response.status_code == 200:
+                    result = webhook_response.json()
+                    self.log_result("Webhook Endpoint Accessibility", True, 
+                                  f"Webhook endpoint operational: {result.get('status', 'unknown')}")
+                    print(f"   ✅ Webhook URL: https://69642194-6693-4e11-a5a5-754841337cd3.preview.emergentagent.com/api/webhook/evolution")
+                    print(f"   ✅ Webhook endpoint responds correctly")
+                else:
+                    self.log_result("Webhook Endpoint Accessibility", False, 
+                                  f"Webhook endpoint error: {webhook_response.status_code}")
+            else:
+                self.log_result("Backend API Accessibility", False, f"Backend not accessible: {response.status_code}")
+                return False
+        except Exception as e:
+            self.log_result("Webhook Configuration Test", False, f"Error: {str(e)}")
+            return False
         
-        # Test 1: Instance Creation with Correct Webhook URL
-        print("\n1️⃣ Testing Instance Creation with Correct Webhook URL")
+        # Test 2: Create Instance with Webhook Configuration
+        test_flow_instance = f"webhook_test_{int(time.time())}"
+        print(f"\n2️⃣ Testing Instance Creation with Webhook Configuration")
         try:
             data = {"instance_name": test_flow_instance}
             response = self.session.post(f"{BACKEND_URL}/evolution/instances", data=data)
@@ -502,7 +532,7 @@ class BackendTester:
             if response.status_code == 200:
                 instance = response.json()
                 self.created_instances.append(test_flow_instance)
-                self.log_result("Instance Creation with Correct Webhook", True, 
+                self.log_result("Instance Creation with Webhook", True, 
                               f"Instance: {instance['instanceName']}")
                 
                 # Verify webhook URL is correctly configured by checking Evolution API directly
@@ -512,6 +542,7 @@ class BackendTester:
                 if evo_response.status_code == 200:
                     evo_instances = evo_response.json()
                     webhook_verified = False
+                    messages_upsert_enabled = False
                     
                     for evo_inst in evo_instances:
                         if evo_inst.get("name") == test_flow_instance:
@@ -523,23 +554,32 @@ class BackendTester:
                             if webhook_url == expected_webhook:
                                 webhook_verified = True
                                 print(f"   ✅ Webhook URL correctly configured: {webhook_url}")
-                                print(f"   ✅ MESSAGES_UPSERT enabled: {'MESSAGES_UPSERT' in webhook_config.get('events', [])}")
                             else:
                                 print(f"   ❌ Webhook URL incorrect: {webhook_url}")
                                 print(f"   ❌ Expected: {expected_webhook}")
+                            
+                            # Check if MESSAGES_UPSERT is enabled
+                            events = webhook_config.get("events", [])
+                            if "MESSAGES_UPSERT" in events:
+                                messages_upsert_enabled = True
+                                print(f"   ✅ MESSAGES_UPSERT enabled in webhook events")
+                            else:
+                                print(f"   ❌ MESSAGES_UPSERT not found in events: {events}")
                             break
                     
                     self.log_result("Webhook URL Verification", webhook_verified, 
                                   f"Webhook URL {'correct' if webhook_verified else 'incorrect'}")
+                    self.log_result("MESSAGES_UPSERT Configuration", messages_upsert_enabled,
+                                  f"MESSAGES_UPSERT {'enabled' if messages_upsert_enabled else 'disabled'}")
                 else:
                     self.log_result("Webhook URL Verification", False, "Could not verify webhook URL")
                     
             else:
-                self.log_result("Instance Creation with Correct Webhook", False, 
+                self.log_result("Instance Creation with Webhook", False, 
                               f"Status: {response.status_code}, Response: {response.text}")
                 return False
         except Exception as e:
-            self.log_result("Instance Creation with Correct Webhook", False, f"Error: {str(e)}")
+            self.log_result("Instance Creation with Webhook", False, f"Error: {str(e)}")
             return False
         
         # Test 2: Flow Creation with Instance Selection
