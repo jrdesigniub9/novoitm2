@@ -716,80 +716,294 @@ class BackendTester:
             self.log_result("Flow List with selectedInstance", False, f"Error: {str(e)}")
         
         return True
+    def test_message_processing_logic_with_instance_filtering(self):
+        """Test Message Processing Logic with Instance-Specific Flow Filtering - CRITICAL PRIORITY"""
+        print("\n=== Testing Message Processing Logic with Instance Filtering ===")
+        print("🎯 FOCUS: Testing process_flow_triggers with different instance scenarios")
         
-        # Test 4: Smart Webhook Processing with Instance-Specific Flow Triggering
-        print("\n4️⃣ Testing Smart Webhook Processing with Instance-Specific Flow Triggering")
-        try:
-            # Test webhook with MESSAGES_UPSERT event that should trigger the instance-specific flow
-            webhook_test_data = {
-                "event": "MESSAGES_UPSERT",
-                "instance": test_flow_instance,  # Message comes from our test instance
-                "data": {
-                    "messages": [{
-                        "key": {
-                            "remoteJid": "5511987654321@s.whatsapp.net",
-                            "fromMe": False,
-                            "id": "test_flow_trigger_message"
-                        },
-                        "message": {
-                            "conversation": "promo"  # This should trigger our flow
-                        }
-                    }]
+        # Create multiple instances and flows for comprehensive testing
+        instance_a = f"instance_a_{int(time.time())}"
+        instance_b = f"instance_b_{int(time.time())}"
+        
+        # Test 1: Create Multiple Instances
+        print(f"\n1️⃣ Creating Multiple Test Instances")
+        for instance_name in [instance_a, instance_b]:
+            try:
+                data = {"instance_name": instance_name}
+                response = self.session.post(f"{BACKEND_URL}/evolution/instances", data=data)
+                
+                if response.status_code == 200:
+                    instance = response.json()
+                    self.created_instances.append(instance_name)
+                    self.log_result(f"Create Instance {instance_name}", True, 
+                                  f"Instance: {instance['instanceName']}")
+                else:
+                    self.log_result(f"Create Instance {instance_name}", False, 
+                                  f"Status: {response.status_code}")
+                    return False
+            except Exception as e:
+                self.log_result(f"Create Instance {instance_name}", False, f"Error: {str(e)}")
+                return False
+        
+        # Test 2: Create Instance-Specific Flows
+        print(f"\n2️⃣ Creating Instance-Specific Flows")
+        flow_ids = []
+        
+        # Flow for Instance A
+        flow_a_data = {
+            "name": "Flow for Instance A",
+            "description": "Flow specifically for instance A",
+            "selectedInstance": instance_a,
+            "nodes": [
+                {
+                    "id": "trigger-a",
+                    "type": "trigger",
+                    "position": {"x": 100, "y": 100},
+                    "data": {
+                        "label": "Instance A Trigger",
+                        "triggerType": "keyword",
+                        "keywords": ["hello", "oi", "start"]
+                    }
+                },
+                {
+                    "id": "message-a",
+                    "type": "message",
+                    "position": {"x": 300, "y": 100},
+                    "data": {"message": f"Response from Instance A flow! 🅰️"}
                 }
-            }
-            
-            response = self.session.post(f"{BACKEND_URL}/webhook/evolution", json=webhook_test_data)
-            if response.status_code == 200:
-                result = response.json()
-                self.log_result("Smart Webhook Processing", True, 
-                              f"Webhook response: {result.get('status', 'unknown')}")
-                print(f"   ✅ Webhook processed MESSAGES_UPSERT event")
-                print(f"   ✅ Message from instance '{test_flow_instance}' processed")
-                print(f"   ✅ Flow trigger keyword 'promo' should activate instance-specific flow")
-            else:
-                self.log_result("Smart Webhook Processing", False, 
-                              f"Status: {response.status_code}, Response: {response.text}")
-        except Exception as e:
-            self.log_result("Smart Webhook Processing", False, f"Error: {str(e)}")
+            ],
+            "edges": [
+                {
+                    "id": "e-a",
+                    "source": "trigger-a",
+                    "target": "message-a"
+                }
+            ],
+            "isActive": True
+        }
         
-        # Test 5: Automatic Flow Execution Verification
-        print("\n5️⃣ Testing Automatic Flow Execution")
+        # Flow for Instance B
+        flow_b_data = {
+            "name": "Flow for Instance B",
+            "description": "Flow specifically for instance B",
+            "selectedInstance": instance_b,
+            "nodes": [
+                {
+                    "id": "trigger-b",
+                    "type": "trigger",
+                    "position": {"x": 100, "y": 100},
+                    "data": {
+                        "label": "Instance B Trigger",
+                        "triggerType": "keyword",
+                        "keywords": ["hello", "oi", "start"]  # Same keywords but different instance
+                    }
+                },
+                {
+                    "id": "message-b",
+                    "type": "message",
+                    "position": {"x": 300, "y": 100},
+                    "data": {"message": f"Response from Instance B flow! 🅱️"}
+                }
+            ],
+            "edges": [
+                {
+                    "id": "e-b",
+                    "source": "trigger-b",
+                    "target": "message-b"
+                }
+            ],
+            "isActive": True
+        }
+        
+        # Flow without specific instance (should work with any instance)
+        flow_any_data = {
+            "name": "Flow for Any Instance",
+            "description": "Flow that works with any instance",
+            "selectedInstance": None,  # No specific instance
+            "nodes": [
+                {
+                    "id": "trigger-any",
+                    "type": "trigger",
+                    "position": {"x": 100, "y": 100},
+                    "data": {
+                        "label": "Any Instance Trigger",
+                        "triggerType": "keyword",
+                        "keywords": ["help", "ajuda"]
+                    }
+                },
+                {
+                    "id": "message-any",
+                    "type": "message",
+                    "position": {"x": 300, "y": 100},
+                    "data": {"message": "Response from Any Instance flow! 🌐"}
+                }
+            ],
+            "edges": [
+                {
+                    "id": "e-any",
+                    "source": "trigger-any",
+                    "target": "message-any"
+                }
+            ],
+            "isActive": True
+        }
+        
+        # Create all flows
+        for flow_data in [flow_a_data, flow_b_data, flow_any_data]:
+            try:
+                response = self.session.post(f"{BACKEND_URL}/flows", json=flow_data)
+                if response.status_code == 200:
+                    created_flow = response.json()
+                    flow_id = created_flow["id"]
+                    flow_ids.append(flow_id)
+                    self.created_flows.append(flow_id)
+                    
+                    selected_instance = created_flow.get("selectedInstance")
+                    self.log_result(f"Create Flow '{flow_data['name']}'", True, 
+                                  f"Flow ID: {flow_id}, Selected Instance: {selected_instance or 'Any'}")
+                else:
+                    self.log_result(f"Create Flow '{flow_data['name']}'", False, 
+                                  f"Status: {response.status_code}")
+                    return False
+            except Exception as e:
+                self.log_result(f"Create Flow '{flow_data['name']}'", False, f"Error: {str(e)}")
+                return False
+        
+        # Test 3: Test Message Processing for Instance A
+        print(f"\n3️⃣ Testing Message Processing for Instance A")
         try:
-            # Wait a moment for flow processing
-            time.sleep(2)
-            
-            # Test with a different instance to verify flow isolation
-            different_instance = f"other_test_{int(time.time())}"
-            
-            webhook_different_instance = {
-                "event": "MESSAGES_UPSERT", 
-                "instance": different_instance,  # Different instance
+            webhook_instance_a = {
+                "event": "MESSAGES_UPSERT",
+                "instance": instance_a,
                 "data": {
                     "messages": [{
                         "key": {
                             "remoteJid": "5511111111111@s.whatsapp.net",
                             "fromMe": False,
-                            "id": "test_different_instance"
+                            "id": "test_instance_a_message"
                         },
                         "message": {
-                            "conversation": "promo"  # Same keyword but different instance
+                            "conversation": "hello"  # Should trigger Instance A flow and Any Instance flow
                         }
                     }]
                 }
             }
             
-            response = self.session.post(f"{BACKEND_URL}/webhook/evolution", json=webhook_different_instance)
+            response = self.session.post(f"{BACKEND_URL}/webhook/evolution", json=webhook_instance_a)
             if response.status_code == 200:
                 result = response.json()
-                self.log_result("Flow Instance Isolation", True, 
-                              f"Different instance processed: {result.get('status', 'unknown')}")
-                print(f"   ✅ Message from different instance '{different_instance}' processed")
-                print(f"   ✅ Flow should NOT trigger for different instance (isolation working)")
+                self.log_result("Message Processing Instance A", True, 
+                              f"Webhook response: {result.get('status', 'unknown')}")
+                print(f"   ✅ Message 'hello' sent to Instance A")
+                print(f"   ✅ Should trigger: Flow for Instance A + Flow for Any Instance")
+                print(f"   ✅ Should NOT trigger: Flow for Instance B")
             else:
-                self.log_result("Flow Instance Isolation", False, 
+                self.log_result("Message Processing Instance A", False, 
                               f"Status: {response.status_code}")
         except Exception as e:
-            self.log_result("Flow Instance Isolation", False, f"Error: {str(e)}")
+            self.log_result("Message Processing Instance A", False, f"Error: {str(e)}")
+        
+        # Test 4: Test Message Processing for Instance B
+        print(f"\n4️⃣ Testing Message Processing for Instance B")
+        try:
+            webhook_instance_b = {
+                "event": "MESSAGES_UPSERT",
+                "instance": instance_b,
+                "data": {
+                    "messages": [{
+                        "key": {
+                            "remoteJid": "5511222222222@s.whatsapp.net",
+                            "fromMe": False,
+                            "id": "test_instance_b_message"
+                        },
+                        "message": {
+                            "conversation": "hello"  # Same keyword, different instance
+                        }
+                    }]
+                }
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/webhook/evolution", json=webhook_instance_b)
+            if response.status_code == 200:
+                result = response.json()
+                self.log_result("Message Processing Instance B", True, 
+                              f"Webhook response: {result.get('status', 'unknown')}")
+                print(f"   ✅ Message 'hello' sent to Instance B")
+                print(f"   ✅ Should trigger: Flow for Instance B + Flow for Any Instance")
+                print(f"   ✅ Should NOT trigger: Flow for Instance A")
+            else:
+                self.log_result("Message Processing Instance B", False, 
+                              f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Message Processing Instance B", False, f"Error: {str(e)}")
+        
+        # Test 5: Test Any Instance Flow Triggering
+        print(f"\n5️⃣ Testing Any Instance Flow Triggering")
+        try:
+            webhook_any_instance = {
+                "event": "MESSAGES_UPSERT",
+                "instance": instance_a,  # Using Instance A
+                "data": {
+                    "messages": [{
+                        "key": {
+                            "remoteJid": "5511333333333@s.whatsapp.net",
+                            "fromMe": False,
+                            "id": "test_any_instance_message"
+                        },
+                        "message": {
+                            "conversation": "help"  # Should trigger Any Instance flow only
+                        }
+                    }]
+                }
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/webhook/evolution", json=webhook_any_instance)
+            if response.status_code == 200:
+                result = response.json()
+                self.log_result("Any Instance Flow Triggering", True, 
+                              f"Webhook response: {result.get('status', 'unknown')}")
+                print(f"   ✅ Message 'help' sent to Instance A")
+                print(f"   ✅ Should trigger: Flow for Any Instance only")
+                print(f"   ✅ Should NOT trigger: Instance-specific flows")
+            else:
+                self.log_result("Any Instance Flow Triggering", False, 
+                              f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Any Instance Flow Triggering", False, f"Error: {str(e)}")
+        
+        # Test 6: Test Non-Existent Instance
+        print(f"\n6️⃣ Testing Non-Existent Instance Message Processing")
+        try:
+            webhook_nonexistent = {
+                "event": "MESSAGES_UPSERT",
+                "instance": "nonexistent_instance",
+                "data": {
+                    "messages": [{
+                        "key": {
+                            "remoteJid": "5511444444444@s.whatsapp.net",
+                            "fromMe": False,
+                            "id": "test_nonexistent_message"
+                        },
+                        "message": {
+                            "conversation": "hello"
+                        }
+                    }]
+                }
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/webhook/evolution", json=webhook_nonexistent)
+            if response.status_code == 200:
+                result = response.json()
+                self.log_result("Non-Existent Instance Processing", True, 
+                              f"Webhook response: {result.get('status', 'unknown')}")
+                print(f"   ✅ Message sent to non-existent instance")
+                print(f"   ✅ Should trigger: Flow for Any Instance only (legacy support)")
+                print(f"   ✅ Should NOT trigger: Instance-specific flows")
+            else:
+                self.log_result("Non-Existent Instance Processing", False, 
+                              f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Non-Existent Instance Processing", False, f"Error: {str(e)}")
         
         return True
 
