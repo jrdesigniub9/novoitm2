@@ -520,6 +520,127 @@ async def check_sentiment_triggers(instance_name: str, contact_number: str, sent
         logging.error(f"Error checking sentiment triggers: {str(e)}")
         return []
 
+async def process_flow_triggers(instance_name: str, contact_number: str, message_text: str):
+    """Process incoming messages and check for flow triggers"""
+    try:
+        # Get all active flows for this instance
+        active_flows = await db.flows.find({"isActive": True}).to_list(1000)
+        
+        for flow_data in active_flows:
+            flow = Flow(**flow_data)
+            
+            # Find trigger nodes in the flow
+            trigger_nodes = [node for node in flow.nodes if node.type == "trigger"]
+            
+            for trigger_node in trigger_nodes:
+                trigger_data = trigger_node.data
+                trigger_type = trigger_data.get("triggerType", "keyword")
+                
+                should_trigger = False
+                
+                if trigger_type == "keyword":
+                    # Check if message contains trigger keywords
+                    keywords = trigger_data.get("keywords", [])
+                    if keywords:
+                        message_lower = message_text.lower()
+                        should_trigger = any(keyword.lower() in message_lower for keyword in keywords)
+                
+                elif trigger_type == "exact_match":
+                    # Check for exact message match
+                    exact_text = trigger_data.get("exactText", "")
+                    should_trigger = message_text.lower().strip() == exact_text.lower().strip()
+                
+                elif trigger_type == "regex":
+                    # Check regex pattern match
+                    import re
+                    pattern = trigger_data.get("pattern", "")
+                    if pattern:
+                        should_trigger = bool(re.search(pattern, message_text, re.IGNORECASE))
+                
+                elif trigger_type == "always":
+                    # Always trigger for any message
+                    should_trigger = True
+                
+                if should_trigger:
+                    logging.info(f"Flow trigger activated: {flow.name} for contact {contact_number}")
+                    
+                    # Execute the flow for this contact
+                    try:
+                        execution = FlowExecution(flowId=flow.id)
+                        execution.currentNodeId = trigger_node.id
+                        
+                        # Start flow execution from the trigger node
+                        await execute_flow_from_node(flow, trigger_node, contact_number, instance_name, execution)
+                        
+                        # Save execution record
+                        await db.flow_executions.insert_one(execution.dict())
+                        
+                    except Exception as flow_error:
+                        logging.error(f"Error executing flow {flow.name}: {str(flow_error)}")
+                        
+    except Exception as e:
+        logging.error(f"Error processing flow triggers: {str(e)}")
+
+async def execute_flow_from_node(flow: Flow, start_node: FlowNode, recipient: str, instance_name: str, execution: FlowExecution):
+    """Execute flow starting from a specific node"""
+    try:
+        current_node = start_node
+        
+        # Execute nodes sequentially
+        while current_node:
+            execution.log.append({
+                "nodeId": current_node.id,
+                "nodeType": current_node.type,
+                "timestamp": datetime.utcnow(),
+                "status": "executing"
+            })
+            
+            # Process current node
+            if current_node.type == "message":
+                message_data = {
+                    "type": "text",
+                    "content": current_node.data.get("message", "")
+                }
+                await send_evolution_message(instance_name, recipient, message_data)
+                
+            elif current_node.type == "media":
+                message_data = {
+                    "type": "media",
+                    "mediaType": current_node.data.get("mediaType", "image"),
+                    "content": current_node.data.get("mediaUrl", ""),
+                    "caption": current_node.data.get("caption", "")
+                }
+                await send_evolution_message(instance_name, recipient, message_data)
+                
+            elif current_node.type == "delay":
+                delay_seconds = current_node.data.get("seconds", 1)
+                await asyncio.sleep(delay_seconds)
+                
+            elif current_node.type == "condition":
+                # Handle conditional logic (for future implementation)
+                pass
+            
+            execution.log[-1]["status"] = "completed"
+            
+            # Find next node
+            next_edges = [edge for edge in flow.edges if edge.source == current_node.id]
+            if next_edges:
+                next_node_id = next_edges[0].target
+                current_node = next((node for node in flow.nodes if node.id == next_node_id), None)
+            else:
+                current_node = None
+        
+        execution.status = "completed"
+        execution.completedAt = datetime.utcnow()
+        
+    except Exception as e:
+        execution.status = "failed"
+        execution.log.append({
+            "error": str(e),
+            "timestamp": datetime.utcnow()
+        })
+        raise e
+
 # Flow Management Routes
 @api_router.post("/flows", response_model=Flow)
 async def create_flow(flow_data: FlowCreate):
