@@ -836,6 +836,9 @@ async def get_ai_responses(limit: int = 50):
         responses = []
         cursor = db.ai_responses.find().sort("timestamp", -1).limit(limit)
         async for response in cursor:
+            # Remove MongoDB ObjectId to avoid serialization issues
+            if "_id" in response:
+                del response["_id"]
             responses.append(response)
         return responses
     except Exception as e:
