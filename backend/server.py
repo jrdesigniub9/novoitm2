@@ -739,22 +739,22 @@ async def get_instances():
         # If Evolution API returns instances, use them as primary source
         if isinstance(evolution_instances, list) and evolution_instances:
             for evo_inst in evolution_instances:
-                instance_name = evo_inst.get("instanceName") or evo_inst.get("instance", {}).get("instanceName")
+                # Evolution API uses 'name' field for instance name
+                instance_name = evo_inst.get("name") or evo_inst.get("instanceName")
                 if instance_name:
                     # Get status from Evolution API
-                    status_data = await get_evolution_instance_status(instance_name)
-                    status = status_data.get("state", "disconnected")
+                    connection_status = evo_inst.get("connectionStatus", "disconnected")
                     
                     # Merge with local data if available
                     local_data = local_dict.get(instance_name, {})
                     
                     instance = {
-                        "id": local_data.get("id", str(uuid.uuid4())),
+                        "id": local_data.get("id", evo_inst.get("id", str(uuid.uuid4()))),
                         "instanceName": instance_name,
-                        "instanceKey": evo_inst.get("hash", local_data.get("instanceKey", "")),
+                        "instanceKey": evo_inst.get("token", local_data.get("instanceKey", "")),
                         "qrCode": local_data.get("qrCode"),
-                        "status": status,
-                        "createdAt": local_data.get("createdAt", datetime.utcnow())
+                        "status": connection_status,
+                        "createdAt": local_data.get("createdAt", evo_inst.get("createdAt", datetime.utcnow()))
                     }
                     result_instances.append(instance)
         else:
