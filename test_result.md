@@ -102,7 +102,76 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Create a complete visual flow builder application similar to n8n with Evolution API integration for WhatsApp automation. Features include drag-and-drop interface, multimedia support (messages, audio, video, documents), file uploads, instance management, and flow execution."
+user_problem_statement: "Não está funcionando para criar novas instancias, quando crio não está criando na api evolution, e tambem não está funcionando para gerar o qrcode para conectar, isso é fundamental para funcionamento do sistema, e deve ter uma primeira tela, limpa para criar fluxo para depois que clicar abrir ele, e não uma tela direta no fluxo onde fica como está agora"
+
+backend:
+  - task: "Fixed Evolution API Integration"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "MAJOR FIXES IMPLEMENTED: Updated Evolution API integration following official documentation. Fixed instance creation payload (changed integration to WHATSAPP-BAILEYS, added qrcode: true), enhanced QR code retrieval with proper response handling, improved error logging. Added new functions: get_evolution_instances() and get_evolution_instance_status() for better API integration. Updated get_instances endpoint to fetch from Evolution API first."
+
+  - task: "Enhanced Instance Management"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added new API helper functions get_evolution_instances() and get_evolution_instance_status() following Evolution API documentation. Updated get_instances endpoint to prioritize Evolution API data over local database and merge both sources for complete instance information."
+
+frontend:
+  - task: "Dashboard Landing Page"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "MAJOR UI RESTRUCTURE: Created beautiful dashboard landing page with stats cards, quick actions, and flows management. App now shows Dashboard first instead of going directly to FlowBuilder. Added navigation between Dashboard and FlowBuilder. Dashboard includes instance management, AI settings, and flow overview."
+
+  - task: "Improved Navigation Flow"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "App now starts with clean dashboard instead of direct flow builder. Added back button to return to dashboard from flow builder. Improved user experience with proper flow between screens."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.1"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Fixed Evolution API Integration"
+    - "Enhanced Instance Management"
+    - "Dashboard Landing Page"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "IMPLEMENTED USER REQUESTED FIXES: 1) Fixed Evolution API integration following official documentation - updated instance creation payload, enhanced QR code handling, improved error logging 2) Created beautiful dashboard landing page instead of direct flow builder access 3) Added proper navigation flow between dashboard and flow builder. Backend Evolution API integration needs testing with real API calls. Frontend dashboard implementation needs UI testing."
 
 backend:
   - task: "Evolution API Integration"
