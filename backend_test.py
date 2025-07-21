@@ -446,6 +446,7 @@ class BackendTester:
         self.test_flow_crud_operations()
         self.test_file_upload_system()
         self.test_evolution_api_integration()
+        self.test_ai_integration()  # New AI integration tests
         self.test_flow_execution_engine()
         self.test_webhook_processing()
         
