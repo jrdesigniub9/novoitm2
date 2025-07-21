@@ -937,7 +937,7 @@ async def evolution_webhook_handler(request: dict):
                 logging.info(f"Connection status updated for {instance_name}: {state}")
         
         elif event == "messages.upsert":
-            # Handle incoming messages - this is critical for the user's requirements
+            # Handle incoming messages and trigger appropriate flows
             messages = data.get("messages", [])
             for message in messages:
                 if not message.get("key", {}).get("fromMe", False):  # Only process incoming messages
@@ -954,11 +954,13 @@ async def evolution_webhook_handler(request: dict):
                     elif "textMessage" in message_content:
                         message_text = message_content["textMessage"].get("text")
                     
-                    # Only process text messages for now
                     if message_text and contact_number:
-                        logging.info(f"Processing incoming message from {contact_number}: {message_text}")
+                        logging.info(f"Processing incoming message from {contact_number} on instance {instance_name}: {message_text}")
                         
-                        # Process with AI in background to avoid blocking webhook response
+                        # Check for active flows that should be triggered for this instance
+                        await process_flow_triggers(instance_name, contact_number, message_text)
+                        
+                        # Also process with AI for intelligent responses
                         asyncio.create_task(process_incoming_message(instance_name, contact_number, message_text))
         
         return {"status": "success", "message": "Webhook processed successfully"}
