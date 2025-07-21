@@ -161,7 +161,6 @@ function FlowBuilder({ onBackToDashboard, instances, setInstances }) {
   const [flows, setFlows] = useState([]);
   const [currentFlow, setCurrentFlow] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
-  const [instances, setInstances] = useState([]);
   const [showInstanceModal, setShowInstanceModal] = useState(false);
   const [showExecuteModal, setShowExecuteModal] = useState(false);
   const [showAISettingsModal, setShowAISettingsModal] = useState(false);
