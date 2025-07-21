@@ -173,6 +173,7 @@ function FlowBuilder() {
   useEffect(() => {
     loadFlows();
     loadInstances();
+    loadAISettings();
   }, []);
 
   const loadFlows = async () => {
@@ -190,6 +191,26 @@ function FlowBuilder() {
       setInstances(response.data);
     } catch (error) {
       console.error('Error loading instances:', error);
+    }
+  };
+
+  const loadAISettings = async () => {
+    try {
+      const response = await axios.get(`${API}/ai/settings`);
+      setAiSettings(response.data);
+    } catch (error) {
+      console.error('Error loading AI settings:', error);
+    }
+  };
+
+  const saveAISettings = async (newSettings) => {
+    try {
+      await axios.post(`${API}/ai/settings`, newSettings);
+      setAiSettings(newSettings);
+      alert('Configurações de IA salvas com sucesso!');
+    } catch (error) {
+      console.error('Error saving AI settings:', error);
+      alert('Erro ao salvar configurações de IA');
     }
   };
 
