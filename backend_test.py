@@ -783,9 +783,9 @@ class BackendTester:
                 self.log_result(f"Delete Flow {flow_id}", False, f"Error: {str(e)}")
     
     def run_all_tests(self):
-        """Run all backend tests with priority on Enhanced Evolution API Instance Creation"""
+        """Run all backend tests with priority on Webhook Correction and Flow-Instance Integration"""
         print("🚀 Starting Comprehensive Backend Testing")
-        print("🎯 PRIORITY: Enhanced Evolution API Instance Creation Testing")
+        print("🎯 PRIORITY: Webhook Correction and Flow-Instance Integration Testing")
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Evolution API URL: {EVOLUTION_API_URL}")
         print("=" * 60)
@@ -794,6 +794,10 @@ class BackendTester:
         if not self.test_api_health():
             print("❌ API is not accessible. Stopping tests.")
             return
+        
+        # CRITICAL PRIORITY TEST: Webhook Correction and Flow-Instance Integration
+        print("\n🔥 CRITICAL PRIORITY TEST - Webhook Correction and Flow-Instance Integration")
+        self.test_corrected_webhook_and_flow_instance_integration()
         
         # PRIORITY TEST: Enhanced Evolution API Instance Creation
         print("\n🔥 CRITICAL PRIORITY TEST - Enhanced Evolution API Instance Creation")
@@ -805,7 +809,7 @@ class BackendTester:
         self.test_evolution_api_integration()  # Legacy test for comparison
         self.test_ai_integration()
         self.test_flow_execution_engine()
-        self.test_webhook_processing()
+        self.test_webhook_processing()  # Legacy webhook tests
         
         # Cleanup
         self.cleanup()
@@ -824,11 +828,11 @@ class BackendTester:
         print(f"Failed: {failed_tests}")
         print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
         
-        # Highlight Enhanced Evolution API results
-        enhanced_tests = [name for name in self.test_results.keys() if "Enhanced" in name]
-        if enhanced_tests:
-            print(f"\n🎯 ENHANCED EVOLUTION API RESULTS:")
-            for test_name in enhanced_tests:
+        # Highlight Critical Priority results
+        critical_tests = [name for name in self.test_results.keys() if any(keyword in name for keyword in ["Webhook", "Instance Selection", "Flow-Instance", "Smart Webhook", "Enhanced"])]
+        if critical_tests:
+            print(f"\n🎯 CRITICAL PRIORITY RESULTS:")
+            for test_name in critical_tests:
                 result = self.test_results[test_name]
                 status = "✅ PASS" if result["success"] else "❌ FAIL"
                 print(f"  {status} {test_name}")
