@@ -394,7 +394,7 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
                         {flow.nodes?.length || 0} nós • {flow.edges?.length || 0} conexões
                       </span>
                       <button
-                        onClick={onOpenFlowBuilder}
+                        onClick={() => onOpenFlowBuilder(flow)}
                         className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
                       >
                         Editar
