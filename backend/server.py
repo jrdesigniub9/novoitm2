@@ -810,6 +810,9 @@ async def get_ai_sessions():
         sessions = []
         cursor = db.sessions.find({"isActive": True}).sort("lastActivity", -1)
         async for session in cursor:
+            # Remove MongoDB ObjectId to avoid serialization issues
+            if "_id" in session:
+                del session["_id"]
             sessions.append(session)
         return sessions
     except Exception as e:
