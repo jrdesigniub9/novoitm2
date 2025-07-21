@@ -1103,9 +1103,13 @@ class BackendTester:
             print("❌ API is not accessible. Stopping tests.")
             return
         
-        # CRITICAL PRIORITY TEST: Webhook Correction and Flow-Instance Integration
-        print("\n🔥 CRITICAL PRIORITY TEST - Webhook Correction and Flow-Instance Integration")
-        self.test_corrected_webhook_and_flow_instance_integration()
+        # CRITICAL PRIORITY TEST: Webhook Configuration and Instance Selection
+        print("\n🔥 CRITICAL PRIORITY TEST - Webhook Configuration and Instance Selection")
+        self.test_webhook_configuration_and_instance_selection()
+        
+        # CRITICAL PRIORITY TEST: Message Processing Logic with Instance Filtering
+        print("\n🔥 CRITICAL PRIORITY TEST - Message Processing Logic with Instance Filtering")
+        self.test_message_processing_logic_with_instance_filtering()
         
         # PRIORITY TEST: Enhanced Evolution API Instance Creation
         print("\n🔥 CRITICAL PRIORITY TEST - Enhanced Evolution API Instance Creation")
