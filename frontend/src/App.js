@@ -573,6 +573,7 @@ function FlowBuilder({ onBackToDashboard, instances, setInstances, flowToLoad })
       const response = await axios.get(`${API}/flows/${flowId}`);
       const flow = response.data;
       setCurrentFlow(flow);
+      setSelectedInstance(flow.selectedInstance || ''); // Carregar instância selecionada
       setNodes(flow.nodes || []);
       setEdges(flow.edges || []);
     } catch (error) {
