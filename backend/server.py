@@ -31,6 +31,9 @@ db = client[os.environ['DB_NAME']]
 EVOLUTION_API_URL = os.environ['EVOLUTION_API_URL']
 EVOLUTION_API_KEY = os.environ['EVOLUTION_API_KEY']
 
+# Webhook URL Config - you can set this in .env file
+WEBHOOK_BASE_URL = os.environ.get('WEBHOOK_BASE_URL', 'https://your-domain.com')  # Set your domain here
+
 # OpenAI Config
 OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
 openai.api_key = OPENAI_API_KEY
