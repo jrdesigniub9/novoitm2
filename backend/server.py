@@ -522,13 +522,28 @@ async def check_sentiment_triggers(instance_name: str, contact_number: str, sent
         return []
 
 async def process_flow_triggers(instance_name: str, contact_number: str, message_text: str):
-    """Process incoming messages and check for flow triggers"""
+    """Process incoming messages and check for flow triggers on the specific instance"""
     try:
-        # Get all active flows for this instance
-        active_flows = await db.flows.find({"isActive": True}).to_list(1000)
+        # Get all active flows that are assigned to this specific instance
+        active_flows = await db.flows.find({
+            "isActive": True,
+            "$or": [
+                {"selectedInstance": instance_name},  # Flows assigned to this specific instance
+                {"selectedInstance": None},           # Flows without specific instance (legacy support)
+                {"selectedInstance": ""}              # Flows with empty instance selection
+            ]
+        }).to_list(1000)
+        
+        logging.info(f"Found {len(active_flows)} active flows for instance {instance_name}")
         
         for flow_data in active_flows:
             flow = Flow(**flow_data)
+            
+            # Skip flows that have a different selected instance
+            if flow.selectedInstance and flow.selectedInstance != instance_name:
+                continue
+                
+            logging.info(f"Checking flow '{flow.name}' for triggers (assigned to instance: {flow.selectedInstance or 'any'})")
             
             # Find trigger nodes in the flow
             trigger_nodes = [node for node in flow.nodes if node.type == "trigger"]
@@ -563,9 +578,9 @@ async def process_flow_triggers(instance_name: str, contact_number: str, message
                     should_trigger = True
                 
                 if should_trigger:
-                    logging.info(f"Flow trigger activated: {flow.name} for contact {contact_number}")
+                    logging.info(f"Flow trigger activated: '{flow.name}' for contact {contact_number} on instance {instance_name}")
                     
-                    # Execute the flow for this contact
+                    # Execute the flow for this contact using the specified instance
                     try:
                         execution = FlowExecution(flowId=flow.id)
                         execution.currentNodeId = trigger_node.id
