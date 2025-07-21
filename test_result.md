@@ -393,12 +393,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "AI Integration and Sentiment Analysis"
-    - "Enhanced Webhook Processing with AI"
-    - "AI Settings Management"
-    - "AI Session and Response Tracking"
+    - "OpenAI Integration"
+    - "AI Settings Management" 
+    - "Conversation Session Management"
+    - "Visual Flow Builder Interface"
+    - "AI Settings Interface"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
