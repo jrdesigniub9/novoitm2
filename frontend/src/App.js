@@ -912,6 +912,190 @@ const ExecuteModal = ({ instances, onClose, onExecute }) => {
   );
 };
 
+// AI Settings Modal Component
+const AISettingsModal = ({ settings, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    defaultPrompt: '',
+    enableSentimentAnalysis: true,
+    enableAutoResponse: true,
+    confidenceThreshold: 0.5,
+    maxContextMessages: 5,
+    disinterestTriggers: [],
+    doubtTriggers: []
+  });
+
+  useEffect(() => {
+    if (settings) {
+      setFormData({
+        defaultPrompt: settings.defaultPrompt || 'Você é um assistente inteligente em português. Responda de forma útil e amigável.',
+        enableSentimentAnalysis: settings.enableSentimentAnalysis !== false,
+        enableAutoResponse: settings.enableAutoResponse !== false,
+        confidenceThreshold: settings.confidenceThreshold || 0.5,
+        maxContextMessages: settings.maxContextMessages || 5,
+        disinterestTriggers: settings.disinterestTriggers || ["não quero", "desistir", "cancelar", "chato", "pare"],
+        doubtTriggers: settings.doubtTriggers || ["dúvida", "não entendi", "confuso", "como", "o que", "por que"]
+      });
+    }
+  }, [settings]);
+
+  const handleChange = (key, value) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleArrayChange = (key, value) => {
+    const array = value.split(',').map(item => item.trim()).filter(item => item);
+    setFormData(prev => ({ ...prev, [key]: array }));
+  };
+
+  const handleSave = () => {
+    onSave(formData);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Settings size={20} />
+          Configurações de IA
+        </h3>
+        
+        <div className="space-y-4">
+          {/* Default Prompt */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Prompt Padrão da IA
+            </label>
+            <textarea
+              value={formData.defaultPrompt}
+              onChange={(e) => handleChange('defaultPrompt', e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-md resize-none"
+              rows={4}
+              placeholder="Digite o prompt que a IA deve usar por padrão..."
+            />
+          </div>
+
+          {/* Switches */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="sentimentAnalysis"
+                checked={formData.enableSentimentAnalysis}
+                onChange={(e) => handleChange('enableSentimentAnalysis', e.target.checked)}
+                className="rounded"
+              />
+              <label htmlFor="sentimentAnalysis" className="text-sm text-gray-700">
+                Ativar Análise de Sentimento
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="autoResponse"
+                checked={formData.enableAutoResponse}
+                onChange={(e) => handleChange('enableAutoResponse', e.target.checked)}
+                className="rounded"
+              />
+              <label htmlFor="autoResponse" className="text-sm text-gray-700">
+                Ativar Resposta Automática
+              </label>
+            </div>
+          </div>
+
+          {/* Confidence Threshold */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Limite de Confiança para Sentimentos: {formData.confidenceThreshold}
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={formData.confidenceThreshold}
+              onChange={(e) => handleChange('confidenceThreshold', parseFloat(e.target.value))}
+              className="w-full"
+            />
+            <div className="text-xs text-gray-500">
+              Quanto maior o valor, mais certeza a IA precisa ter sobre o sentimento
+            </div>
+          </div>
+
+          {/* Max Context Messages */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Máximo de Mensagens de Contexto
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="20"
+              value={formData.maxContextMessages}
+              onChange={(e) => handleChange('maxContextMessages', parseInt(e.target.value))}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            />
+            <div className="text-xs text-gray-500">
+              Quantas mensagens anteriores a IA deve considerar para contexto
+            </div>
+          </div>
+
+          {/* Disinterest Triggers */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Palavras que Indicam Desinteresse
+            </label>
+            <input
+              type="text"
+              value={formData.disinterestTriggers.join(', ')}
+              onChange={(e) => handleArrayChange('disinterestTriggers', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md"
+              placeholder="não quero, desistir, cancelar..."
+            />
+            <div className="text-xs text-gray-500">
+              Separar palavras por vírgula. Quando detectadas, a IA tentará reter o cliente.
+            </div>
+          </div>
+
+          {/* Doubt Triggers */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Palavras que Indicam Dúvidas
+            </label>
+            <input
+              type="text"
+              value={formData.doubtTriggers.join(', ')}
+              onChange={(e) => handleArrayChange('doubtTriggers', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md"
+              placeholder="dúvida, não entendi, confuso..."
+            />
+            <div className="text-xs text-gray-500">
+              Separar palavras por vírgula. Quando detectadas, a IA enviará conteúdo explicativo.
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-6">
+          <button
+            onClick={handleSave}
+            className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            <Save size={16} className="inline mr-2" />
+            Salvar Configurações
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   return (
     <div className="App">
