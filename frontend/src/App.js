@@ -1099,22 +1099,28 @@ const InstanceModal = ({ instances, onClose, onCreateInstance, onGetQRCode, qrCo
         </div>
 
         <div className="space-y-2">
-          {instances.map((instance) => (
-            <div key={instance.id} className="p-3 border border-gray-200 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div>
-                  <div className="font-medium">{instance.instanceName}</div>
-                  <div className="text-sm text-gray-600">Status: {instance.status}</div>
+          {instances && instances.length > 0 ? (
+            instances.map((instance) => (
+              <div key={instance.id || instance.instanceName} className="p-3 border border-gray-200 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="font-medium">{instance.instanceName}</div>
+                    <div className="text-sm text-gray-600">Status: {instance.status || 'Desconhecido'}</div>
+                  </div>
+                  <button
+                    onClick={() => onGetQRCode(instance.instanceName)}
+                    className="p-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  >
+                    <QrCode size={16} />
+                  </button>
                 </div>
-                <button
-                  onClick={() => onGetQRCode(instance.instanceName)}
-                  className="p-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                >
-                  <QrCode size={16} />
-                </button>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-4 text-gray-500">
+              Nenhuma instância encontrada. Crie uma nova instância.
             </div>
-          ))}
+          )}
         </div>
 
         {qrCode && (
