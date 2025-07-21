@@ -217,6 +217,20 @@ function FlowBuilder() {
         return { seconds: 5 };
       case 'trigger':
         return { label: 'Início' };
+      case 'ai':
+        return { 
+          model: 'gpt-4', 
+          prompt: 'Você é um assistente inteligente. Analise o sentimento da mensagem e responda de forma apropriada.',
+          sentiment: true,
+          language: 'pt-BR'
+        };
+      case 'conditional':
+        return { 
+          condition: 'sentiment', 
+          action: 'auto_response',
+          sentimentType: 'negative',
+          responseType: 'media'
+        };
       default:
         return {};
     }
