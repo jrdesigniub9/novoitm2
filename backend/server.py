@@ -568,8 +568,8 @@ async def evolution_webhook(request_data: dict):
     logging.info(f"Evolution webhook received: {request_data}")
     
     # Process webhook events here
-    event_type = request_data.get("type")
-    instance_name = request_data.get("instance")
+    event_type = request_data.get("type") or request_data.get("event")
+    instance_name = request_data.get("instance") or request_data.get("instanceName")
     
     if event_type == "qrcode.updated":
         # Update QR code in database
@@ -585,8 +585,52 @@ async def evolution_webhook(request_data: dict):
             {"instanceName": instance_name},
             {"$set": {"status": status}}
         )
+    elif event_type == "messages.upsert" or event_type == "MESSAGES_UPSERT":
+        # Process incoming messages with AI
+        try:
+            messages = request_data.get("data", [])
+            if isinstance(messages, list):
+                for msg in messages:
+                    await process_message_event(instance_name, msg)
+            else:
+                await process_message_event(instance_name, messages)
+        except Exception as e:
+            logging.error(f"Error processing message event: {str(e)}")
     
     return {"status": "ok"}
+
+async def process_message_event(instance_name: str, message_data: Dict[str, Any]):
+    """Process individual message from webhook"""
+    try:
+        # Extract message information
+        key = message_data.get("key", {})
+        message = message_data.get("message", {})
+        
+        # Skip if message is from the bot itself
+        if key.get("fromMe", False):
+            return
+        
+        # Extract sender number (remove @s.whatsapp.net suffix)
+        contact_number = key.get("remoteJid", "").replace("@s.whatsapp.net", "")
+        
+        # Extract message text
+        message_text = None
+        if "conversation" in message:
+            message_text = message["conversation"]
+        elif "extendedTextMessage" in message:
+            message_text = message["extendedTextMessage"].get("text")
+        elif "textMessage" in message:
+            message_text = message["textMessage"].get("text")
+        
+        # Only process text messages for now
+        if message_text and contact_number:
+            logging.info(f"Processing incoming message from {contact_number}: {message_text}")
+            
+            # Process with AI in background to avoid blocking webhook response
+            asyncio.create_task(process_incoming_message(instance_name, contact_number, message_text))
+            
+    except Exception as e:
+        logging.error(f"Error processing message event: {str(e)}")
 
 # Test route
 @api_router.get("/")
