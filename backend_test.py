@@ -14,7 +14,7 @@ from typing import Dict, Any, List
 import os
 
 # Configuration
-BACKEND_URL = "https://69642194-6693-4e11-a5a5-754841337cd3.preview.emergentagent.com/api"
+BACKEND_URL = "https://361ef6cf-f1d8-4c29-b6e0-cb9a84c1a3ab.preview.emergentagent.com/api"
 EVOLUTION_API_URL = "http://apiwhatsapp.maapletech.com.br"
 EVOLUTION_API_KEY = "322683C4C655415CAAFFFE10F7D57E11"
 
@@ -510,7 +510,7 @@ class BackendTester:
                     result = webhook_response.json()
                     self.log_result("Webhook Endpoint Accessibility", True, 
                                   f"Webhook endpoint operational: {result.get('status', 'unknown')}")
-                    print(f"   ✅ Webhook URL: https://69642194-6693-4e11-a5a5-754841337cd3.preview.emergentagent.com/api/webhook/evolution")
+                    print(f"   ✅ Webhook URL: https://361ef6cf-f1d8-4c29-b6e0-cb9a84c1a3ab.preview.emergentagent.com/api/webhook/evolution")
                     print(f"   ✅ Webhook endpoint responds correctly")
                 else:
                     self.log_result("Webhook Endpoint Accessibility", False, 
@@ -549,7 +549,7 @@ class BackendTester:
                             # Check if webhook URL contains the correct backend URL
                             webhook_config = evo_inst.get("webhook", {})
                             webhook_url = webhook_config.get("url", "")
-                            expected_webhook = "https://69642194-6693-4e11-a5a5-754841337cd3.preview.emergentagent.com/api/webhook/evolution"
+                            expected_webhook = "https://361ef6cf-f1d8-4c29-b6e0-cb9a84c1a3ab.preview.emergentagent.com/api/webhook/evolution"
                             
                             if webhook_url == expected_webhook:
                                 webhook_verified = True
