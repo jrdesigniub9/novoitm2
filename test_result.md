@@ -324,11 +324,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Evolution API Integration"
-    - "Flow Management CRUD"
-    - "File Upload System"
-    - "Flow Execution Engine"
-    - "Instance Management"
+    - "AI Integration and Sentiment Analysis"
+    - "Enhanced Webhook Processing with AI"
+    - "AI Settings Management"
+    - "AI Session and Response Tracking"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
