@@ -155,6 +155,282 @@ const initialNodes = [
 
 const initialEdges = [];
 
+// Dashboard Component
+const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
+  const [flows, setFlows] = useState([]);
+  const [showInstanceModal, setShowInstanceModal] = useState(false);
+  const [showAISettingsModal, setShowAISettingsModal] = useState(false);
+  const [qrCode, setQrCode] = useState(null);
+  const [aiSettings, setAiSettings] = useState(null);
+
+  useEffect(() => {
+    loadFlows();
+    loadInstances();
+    loadAISettings();
+  }, []);
+
+  const loadFlows = async () => {
+    try {
+      const response = await axios.get(`${API}/flows`);
+      setFlows(response.data);
+    } catch (error) {
+      console.error('Error loading flows:', error);
+    }
+  };
+
+  const loadInstances = async () => {
+    try {
+      const response = await axios.get(`${API}/evolution/instances`);
+      setInstances(response.data);
+    } catch (error) {
+      console.error('Error loading instances:', error);
+    }
+  };
+
+  const loadAISettings = async () => {
+    try {
+      const response = await axios.get(`${API}/ai/settings`);
+      setAiSettings(response.data);
+    } catch (error) {
+      console.error('Error loading AI settings:', error);
+    }
+  };
+
+  const createInstance = async (instanceName) => {
+    try {
+      const formData = new FormData();
+      formData.append('instance_name', instanceName);
+
+      await axios.post(`${API}/evolution/instances`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      loadInstances();
+      alert('Instância criada com sucesso!');
+    } catch (error) {
+      console.error('Error creating instance:', error);
+      alert('Erro ao criar instância');
+    }
+  };
+
+  const getQRCode = async (instanceName) => {
+    try {
+      const response = await axios.get(`${API}/evolution/instances/${instanceName}/qr`);
+      setQrCode(response.data.qrcode);
+    } catch (error) {
+      console.error('Error getting QR code:', error);
+      alert('Erro ao obter QR code');
+    }
+  };
+
+  const saveAISettings = async (newSettings) => {
+    try {
+      await axios.post(`${API}/ai/settings`, newSettings);
+      setAiSettings(newSettings);
+      alert('Configurações de IA salvas com sucesso!');
+    } catch (error) {
+      console.error('Error saving AI settings:', error);
+      alert('Erro ao salvar configurações de IA');
+    }
+  };
+
+  const deleteFlow = async (flowId) => {
+    if (window.confirm('Tem certeza que deseja excluir este fluxo?')) {
+      try {
+        await axios.delete(`${API}/flows/${flowId}`);
+        loadFlows();
+        alert('Fluxo excluído com sucesso!');
+      } catch (error) {
+        console.error('Error deleting flow:', error);
+        alert('Erro ao excluir fluxo');
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <Bot className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">WhatsApp Flow Builder</h1>
+                <p className="text-gray-600">Crie fluxos de automação inteligentes</p>
+              </div>
+            </div>
+            <div className="text-sm text-gray-500">
+              <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+              Sistema Online
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Fluxos Criados</p>
+                <p className="text-3xl font-bold text-gray-900">{flows.length}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Instâncias WhatsApp</p>
+                <p className="text-3xl font-bold text-gray-900">{instances.length}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <Smartphone className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {instances.filter(i => i.status === 'open').length} conectadas
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">IA Configurada</p>
+                <p className="text-3xl font-bold text-gray-900">{aiSettings ? '✓' : '✗'}</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                <Brain className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-2xl shadow-sm p-8 mb-8 border border-gray-100">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Ações Rápidas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button
+              onClick={onOpenFlowBuilder}
+              className="flex flex-col items-center gap-3 p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+            >
+              <Plus className="w-8 h-8" />
+              <span className="font-medium">Criar Novo Fluxo</span>
+            </button>
+
+            <button
+              onClick={() => setShowInstanceModal(true)}
+              className="flex flex-col items-center gap-3 p-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:scale-105"
+            >
+              <Smartphone className="w-8 h-8" />
+              <span className="font-medium">Gerenciar WhatsApp</span>
+            </button>
+
+            <button
+              onClick={() => setShowAISettingsModal(true)}
+              className="flex flex-col items-center gap-3 p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+            >
+              <Settings className="w-8 h-8" />
+              <span className="font-medium">Configurar IA</span>
+            </button>
+
+            <button
+              onClick={loadFlows}
+              className="flex flex-col items-center gap-3 p-6 bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 transform hover:scale-105"
+            >
+              <Play className="w-8 h-8" />
+              <span className="font-medium">Atualizar Dados</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Flows List */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900">Seus Fluxos</h2>
+            <p className="text-gray-600 mt-1">Gerencie e execute seus fluxos de automação</p>
+          </div>
+          <div className="p-6">
+            {flows.length === 0 ? (
+              <div className="text-center py-12">
+                <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum fluxo criado</h3>
+                <p className="text-gray-600 mb-6">Comece criando seu primeiro fluxo de automação</p>
+                <button
+                  onClick={onOpenFlowBuilder}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="w-5 h-5 inline mr-2" />
+                  Criar Primeiro Fluxo
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {flows.map((flow) => (
+                  <div key={flow.id} className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 text-lg">{flow.name}</h3>
+                        <p className="text-gray-600 text-sm mt-1">{flow.description || 'Sem descrição'}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => deleteFlow(flow.id)}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">
+                        {flow.nodes?.length || 0} nós • {flow.edges?.length || 0} conexões
+                      </span>
+                      <button
+                        onClick={onOpenFlowBuilder}
+                        className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Editar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Instance Modal */}
+      {showInstanceModal && (
+        <InstanceModal
+          instances={instances}
+          onClose={() => setShowInstanceModal(false)}
+          onCreateInstance={createInstance}
+          onGetQRCode={getQRCode}
+          qrCode={qrCode}
+        />
+      )}
+
+      {/* AI Settings Modal */}
+      {showAISettingsModal && (
+        <AISettingsModal
+          settings={aiSettings}
+          onClose={() => setShowAISettingsModal(false)}
+          onSave={saveAISettings}
+        />
+      )}
+    </div>
+  );
+};
+
 function FlowBuilder({ onBackToDashboard, instances, setInstances }) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
