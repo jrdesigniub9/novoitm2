@@ -1113,6 +1113,16 @@ async def evolution_webhook_handler(request: dict):
         instance_name = request.get("instance")
         data = request.get("data", {})
         
+        # Log webhook event
+        await log_webhook_event(
+            event_type="evolution",
+            event=event or "unknown",
+            payload=request,
+            headers={},
+            instance_name=instance_name,
+            processed=False
+        )
+        
         if event == "qrcode.updated":
             # Handle QR code updates
             qr_code = data.get("qrcode", {}).get("base64")
@@ -1122,6 +1132,12 @@ async def evolution_webhook_handler(request: dict):
                     {"$set": {"qrCode": qr_code, "status": "qr_code_ready"}}
                 )
                 logging.info(f"QR code updated for instance: {instance_name}")
+                
+                # Update webhook log as processed
+                await db.webhook_logs.update_one(
+                    {"instanceName": instance_name, "event": event, "processed": False},
+                    {"$set": {"processed": True}}
+                )
         
         elif event == "connection.update":
             # Handle connection status updates  
@@ -1132,6 +1148,12 @@ async def evolution_webhook_handler(request: dict):
                     {"$set": {"status": state}}
                 )
                 logging.info(f"Connection status updated for {instance_name}: {state}")
+                
+                # Update webhook log as processed
+                await db.webhook_logs.update_one(
+                    {"instanceName": instance_name, "event": event, "processed": False},
+                    {"$set": {"processed": True}}
+                )
         
         elif event == "messages.upsert":
             # Handle incoming messages and trigger appropriate flows
@@ -1154,16 +1176,52 @@ async def evolution_webhook_handler(request: dict):
                     if message_text and contact_number:
                         logging.info(f"Processing incoming message from {contact_number} on instance {instance_name}: {message_text}")
                         
+                        # Log incoming message to flow messages (will be associated with flows later)
+                        flows = await db.flows.find({"isActive": True}).to_list(1000)
+                        for flow in flows:
+                            flow_obj = Flow(**flow)
+                            # Check if this flow should handle this instance
+                            if not flow_obj.selectedInstance or flow_obj.selectedInstance == instance_name:
+                                await log_flow_message(
+                                    flow_id=flow_obj.id,
+                                    instance_name=instance_name,
+                                    contact_number=contact_number,
+                                    message=message_text,
+                                    message_type="text",
+                                    direction="incoming",
+                                    processed=False,
+                                    trigger_match=False
+                                )
+                        
                         # Check for active flows that should be triggered for this instance
                         await process_flow_triggers(instance_name, contact_number, message_text)
                         
                         # Also process with AI for intelligent responses
                         asyncio.create_task(process_incoming_message(instance_name, contact_number, message_text))
+            
+            # Update webhook log as processed
+            await db.webhook_logs.update_one(
+                {"instanceName": instance_name, "event": event, "processed": False},
+                {"$set": {"processed": True}}
+            )
         
         return {"status": "success", "message": "Webhook processed successfully"}
         
     except Exception as e:
-        logging.error(f"Error processing Evolution webhook: {str(e)}")
+        error_msg = f"Error processing Evolution webhook: {str(e)}"
+        logging.error(error_msg)
+        
+        # Log error to webhook logs
+        await log_webhook_event(
+            event_type="evolution",
+            event=request.get("event", "unknown"),
+            payload=request,
+            headers={},
+            instance_name=request.get("instance"),
+            processed=True,
+            error=error_msg
+        )
+        
         return {"status": "error", "message": f"Webhook processing failed: {str(e)}"}
 
 @api_router.get("/evolution/instances")
