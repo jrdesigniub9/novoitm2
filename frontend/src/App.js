@@ -367,6 +367,20 @@ function FlowBuilder() {
               <span className="text-sm">Mensagem</span>
             </button>
             <button
+              onClick={() => addNode('ai')}
+              className="flex items-center gap-2 p-3 bg-indigo-100 hover:bg-indigo-200 rounded-lg text-indigo-700 transition-colors"
+            >
+              <Brain size={16} />
+              <span className="text-sm">IA</span>
+            </button>
+            <button
+              onClick={() => addNode('conditional')}
+              className="flex items-center gap-2 p-3 bg-yellow-100 hover:bg-yellow-200 rounded-lg text-yellow-700 transition-colors"
+            >
+              <Zap size={16} />
+              <span className="text-sm">Condição</span>
+            </button>
+            <button
               onClick={() => addNode('media')}
               className="flex items-center gap-2 p-3 bg-purple-100 hover:bg-purple-200 rounded-lg text-purple-700 transition-colors"
             >
