@@ -459,6 +459,13 @@ function FlowBuilder() {
               <Smartphone size={16} />
               Gerenciar Instâncias
             </button>
+            <button
+              onClick={() => setShowAISettingsModal(true)}
+              className="w-full flex items-center gap-2 p-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors"
+            >
+              <Settings size={16} />
+              Configurações IA
+            </button>
           </div>
         </div>
 
