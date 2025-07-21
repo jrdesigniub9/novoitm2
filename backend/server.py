@@ -534,6 +534,103 @@ async def upload_file(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Upload failed: {str(e)}")
 
+# AI Configuration Routes
+@api_router.get("/ai/sessions")
+async def get_ai_sessions():
+    """Get all AI conversation sessions"""
+    try:
+        sessions = []
+        cursor = db.sessions.find({"isActive": True}).sort("lastActivity", -1)
+        async for session in cursor:
+            sessions.append(session)
+        return sessions
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to get sessions: {str(e)}")
+
+@api_router.get("/ai/sessions/{session_id}")
+async def get_ai_session(session_id: str):
+    """Get specific AI session details"""
+    try:
+        session = await db.sessions.find_one({"id": session_id})
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        return session
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to get session: {str(e)}")
+
+@api_router.get("/ai/responses")
+async def get_ai_responses(limit: int = 50):
+    """Get recent AI responses"""
+    try:
+        responses = []
+        cursor = db.ai_responses.find().sort("timestamp", -1).limit(limit)
+        async for response in cursor:
+            responses.append(response)
+        return responses
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to get responses: {str(e)}")
+
+@api_router.post("/ai/test")
+async def test_ai_response(message: str, prompt: str = None):
+    """Test AI response generation"""
+    try:
+        if not message:
+            raise HTTPException(status_code=400, detail="Message is required")
+        
+        # Analyze sentiment
+        sentiment = await analyze_sentiment(message)
+        
+        # Generate AI response
+        ai_response = await generate_ai_response(message, prompt=prompt)
+        
+        return {
+            "input_message": message,
+            "ai_response": ai_response,
+            "sentiment": sentiment
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to test AI: {str(e)}")
+
+class AISettingsModel(BaseModel):
+    defaultPrompt: str = "Você é um assistente inteligente em português. Responda de forma útil e amigável."
+    enableSentimentAnalysis: bool = True
+    enableAutoResponse: bool = True
+    confidenceThreshold: float = 0.5
+    maxContextMessages: int = 5
+    disinterestTriggers: List[str] = ["não quero", "desistir", "cancelar", "chato", "pare"]
+    doubtTriggers: List[str] = ["dúvida", "não entendi", "confuso", "como", "o que", "por que"]
+
+@api_router.post("/ai/settings")
+async def update_ai_settings(settings: AISettingsModel):
+    """Update AI settings"""
+    try:
+        settings_dict = settings.dict()
+        settings_dict["id"] = "default"
+        settings_dict["updatedAt"] = datetime.utcnow()
+        
+        await db.ai_settings.update_one(
+            {"id": "default"},
+            {"$set": settings_dict},
+            upsert=True
+        )
+        
+        return {"success": True, "message": "AI settings updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to update settings: {str(e)}")
+
+@api_router.get("/ai/settings")
+async def get_ai_settings():
+    """Get current AI settings"""
+    try:
+        settings = await db.ai_settings.find_one({"id": "default"})
+        if not settings:
+            # Return default settings
+            default_settings = AISettingsModel()
+            return default_settings.dict()
+        return settings
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to get settings: {str(e)}")
+
 # Evolution API Instance Management
 @api_router.post("/evolution/instances", response_model=EvolutionInstance)
 async def create_instance(instance_name: str = Form(...)):
