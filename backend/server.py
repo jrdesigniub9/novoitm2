@@ -14,6 +14,9 @@ import aiofiles
 import base64
 import requests
 import json
+import openai
+from textblob import TextBlob
+import asyncio
 
 
 ROOT_DIR = Path(__file__).parent
@@ -27,6 +30,10 @@ db = client[os.environ['DB_NAME']]
 # Evolution API Config
 EVOLUTION_API_URL = os.environ['EVOLUTION_API_URL']
 EVOLUTION_API_KEY = os.environ['EVOLUTION_API_KEY']
+
+# OpenAI Config
+OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
+openai.api_key = OPENAI_API_KEY
 
 # Create the main app without a prefix
 app = FastAPI()
