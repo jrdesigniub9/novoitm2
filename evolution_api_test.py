@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://214014b5-ace7-45cb-9a96-c040950b303d.preview.emergentagent.com/api"
+BACKEND_URL = "https://46f52934-14c1-4f4d-ae20-36e6612ad63c.preview.emergentagent.com/api"
 EVOLUTION_API_URL = "http://apiwhatsapp.maapletech.com.br"
 EVOLUTION_API_KEY = "322683C4C655415CAAFFFE10F7D57E11"
 

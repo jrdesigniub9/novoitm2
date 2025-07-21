@@ -8,7 +8,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = "https://214014b5-ace7-45cb-9a96-c040950b303d.preview.emergentagent.com/api"
+BACKEND_URL = "https://46f52934-14c1-4f4d-ae20-36e6612ad63c.preview.emergentagent.com/api"
 
 def test_sentiment_analysis():
     """Test sentiment analysis with various Portuguese messages"""
