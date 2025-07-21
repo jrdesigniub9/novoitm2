@@ -119,15 +119,15 @@ class AIResponse(BaseModel):
 
 # Evolution API Helper Functions
 async def create_evolution_instance(instance_name: str):
-    """Create a new WhatsApp instance in Evolution API"""
+    """Create a new WhatsApp instance in Evolution API following official documentation"""
     headers = {
         "apikey": EVOLUTION_API_KEY,
         "Content-Type": "application/json"
     }
     payload = {
         "instanceName": instance_name,
-        "integration": "WHATSAPP-BUSINESS",
-        "webhookUrl": f"{os.environ.get('BACKEND_URL', 'http://localhost:8000')}/api/evolution/webhook"
+        "qrcode": True,
+        "integration": "WHATSAPP-BAILEYS"
     }
     
     try:
@@ -136,9 +136,17 @@ async def create_evolution_instance(instance_name: str):
             headers=headers,
             json=payload
         )
-        return response.json()
+        logging.info(f"Evolution API create instance response: {response.status_code} - {response.text}")
+        if response.status_code == 201 or response.status_code == 200:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code, detail=f"Evolution API error: {response.text}")
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Request failed to Evolution API: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create instance: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to create instance: {str(e)}")
+        logging.error(f"Unexpected error creating instance: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create instance: {str(e)}")
 
 async def get_evolution_qr_code(instance_name: str):
     """Get QR Code for WhatsApp connection"""
