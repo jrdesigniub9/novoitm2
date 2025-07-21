@@ -149,7 +149,7 @@ async def create_evolution_instance(instance_name: str):
         raise HTTPException(status_code=500, detail=f"Failed to create instance: {str(e)}")
 
 async def get_evolution_qr_code(instance_name: str):
-    """Get QR Code for WhatsApp connection"""
+    """Get QR Code for WhatsApp connection following official documentation"""
     headers = {"apikey": EVOLUTION_API_KEY}
     
     try:
@@ -157,9 +157,33 @@ async def get_evolution_qr_code(instance_name: str):
             f"{EVOLUTION_API_URL}/instance/connect/{instance_name}",
             headers=headers
         )
-        return response.json()
+        logging.info(f"Evolution API QR code response: {response.status_code} - {response.text}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            # According to Evolution API docs, QR code can be in different formats
+            qr_code = None
+            if 'qrcode' in data and 'base64' in data['qrcode']:
+                qr_code = data['qrcode']['base64']
+            elif 'base64' in data:
+                qr_code = data['base64']
+            elif 'qrcode' in data:
+                qr_code = data['qrcode']
+            
+            return {
+                "success": True,
+                "qrcode": qr_code,
+                "data": data
+            }
+        else:
+            raise HTTPException(status_code=response.status_code, detail=f"Evolution API error: {response.text}")
+            
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Request failed to Evolution API: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get QR code: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to get QR code: {str(e)}")
+        logging.error(f"Unexpected error getting QR code: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get QR code: {str(e)}")
 
 async def send_evolution_message(instance_name: str, recipient: str, message_data: Dict[str, Any]):
     """Send message through Evolution API"""
