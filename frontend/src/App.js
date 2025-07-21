@@ -164,6 +164,8 @@ function FlowBuilder() {
   const [instances, setInstances] = useState([]);
   const [showInstanceModal, setShowInstanceModal] = useState(false);
   const [showExecuteModal, setShowExecuteModal] = useState(false);
+  const [showAISettingsModal, setShowAISettingsModal] = useState(false);
+  const [aiSettings, setAiSettings] = useState(null);
   const [qrCode, setQrCode] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
 
