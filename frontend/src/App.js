@@ -39,6 +39,7 @@ const API = `${BACKEND_URL}/api`;
 const MessageNode = ({ data, isConnectable }) => {
   return (
     <div className="bg-blue-500 text-white p-4 rounded-lg shadow-md border-2 border-blue-600 min-w-[200px]">
+      <Handle type="target" position={Position.Left} isConnectable={isConnectable} />
       <div className="flex items-center gap-2 mb-2">
         <MessageSquare size={16} />
         <span className="font-semibold">Mensagem</span>
@@ -46,10 +47,7 @@ const MessageNode = ({ data, isConnectable }) => {
       <div className="text-sm bg-blue-600 p-2 rounded">
         {data.message || 'Clique para editar mensagem...'}
       </div>
-      <div className="flex justify-between mt-2">
-        <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
-        <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
-      </div>
+      <Handle type="source" position={Position.Right} isConnectable={isConnectable} />
     </div>
   );
 };
@@ -57,6 +55,7 @@ const MessageNode = ({ data, isConnectable }) => {
 const MediaNode = ({ data, isConnectable }) => {
   return (
     <div className="bg-purple-500 text-white p-4 rounded-lg shadow-md border-2 border-purple-600 min-w-[200px]">
+      <Handle type="target" position={Position.Left} isConnectable={isConnectable} />
       <div className="flex items-center gap-2 mb-2">
         <Image size={16} />
         <span className="font-semibold">Mídia</span>
@@ -65,10 +64,7 @@ const MediaNode = ({ data, isConnectable }) => {
         <div>Tipo: {data.mediaType || 'image'}</div>
         {data.caption && <div>Legenda: {data.caption}</div>}
       </div>
-      <div className="flex justify-between mt-2">
-        <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
-        <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
-      </div>
+      <Handle type="source" position={Position.Right} isConnectable={isConnectable} />
     </div>
   );
 };
@@ -76,6 +72,7 @@ const MediaNode = ({ data, isConnectable }) => {
 const DelayNode = ({ data, isConnectable }) => {
   return (
     <div className="bg-orange-500 text-white p-4 rounded-lg shadow-md border-2 border-orange-600 min-w-[200px]">
+      <Handle type="target" position={Position.Left} isConnectable={isConnectable} />
       <div className="flex items-center gap-2 mb-2">
         <Clock size={16} />
         <span className="font-semibold">Delay</span>
@@ -83,10 +80,7 @@ const DelayNode = ({ data, isConnectable }) => {
       <div className="text-sm bg-orange-600 p-2 rounded">
         Aguardar: {data.seconds || 1} segundos
       </div>
-      <div className="flex justify-between mt-2">
-        <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
-        <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
-      </div>
+      <Handle type="source" position={Position.Right} isConnectable={isConnectable} />
     </div>
   );
 };
@@ -101,9 +95,42 @@ const TriggerNode = ({ data, isConnectable }) => {
       <div className="text-sm bg-green-600 p-2 rounded">
         Início do fluxo
       </div>
-      <div className="flex justify-end mt-2">
-        <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
+      <Handle type="source" position={Position.Right} isConnectable={isConnectable} />
+    </div>
+  );
+};
+
+const AINode = ({ data, isConnectable }) => {
+  return (
+    <div className="bg-indigo-500 text-white p-4 rounded-lg shadow-md border-2 border-indigo-600 min-w-[200px]">
+      <Handle type="target" position={Position.Left} isConnectable={isConnectable} />
+      <div className="flex items-center gap-2 mb-2">
+        <Brain size={16} />
+        <span className="font-semibold">IA Inteligente</span>
       </div>
+      <div className="text-sm bg-indigo-600 p-2 rounded">
+        <div>Modelo: {data.model || 'GPT-4'}</div>
+        <div>Análise: {data.sentiment || 'Ativada'}</div>
+      </div>
+      <Handle type="source" position={Position.Right} isConnectable={isConnectable} />
+    </div>
+  );
+};
+
+const ConditionalNode = ({ data, isConnectable }) => {
+  return (
+    <div className="bg-yellow-500 text-white p-4 rounded-lg shadow-md border-2 border-yellow-600 min-w-[200px]">
+      <Handle type="target" position={Position.Left} isConnectable={isConnectable} />
+      <div className="flex items-center gap-2 mb-2">
+        <Zap size={16} />
+        <span className="font-semibold">Condição</span>
+      </div>
+      <div className="text-sm bg-yellow-600 p-2 rounded">
+        <div>Trigger: {data.condition || 'Sentimento'}</div>
+        <div>Ação: {data.action || 'Resposta automática'}</div>
+      </div>
+      <Handle type="source" position={Position.Right} id="true" isConnectable={isConnectable} />
+      <Handle type="source" position={Position.Bottom} id="false" isConnectable={isConnectable} />
     </div>
   );
 };
