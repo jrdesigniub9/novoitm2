@@ -187,6 +187,210 @@ async def send_evolution_message(instance_name: str, recipient: str, message_dat
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to send message: {str(e)}")
 
+# AI Helper Functions
+async def analyze_sentiment(text: str) -> Dict[str, float]:
+    """Analyze sentiment using TextBlob and return detailed analysis"""
+    try:
+        blob = TextBlob(text)
+        polarity = blob.sentiment.polarity  # -1 (negative) to 1 (positive)
+        subjectivity = blob.sentiment.subjectivity  # 0 (objective) to 1 (subjective)
+        
+        # Classify sentiment
+        if polarity >= 0.1:
+            sentiment_class = "positive"
+        elif polarity <= -0.1:
+            sentiment_class = "negative" 
+        else:
+            sentiment_class = "neutral"
+        
+        # Detect confusion/doubt indicators
+        doubt_keywords = ["dúvida", "não entendi", "confuso", "como", "o que", "por que", "?"]
+        has_doubt = any(keyword in text.lower() for keyword in doubt_keywords)
+        
+        # Detect disinterest indicators  
+        disinterest_keywords = ["não quero", "desistir", "cancelar", "chato", "pare", "parar"]
+        has_disinterest = any(keyword in text.lower() for keyword in disinterest_keywords)
+        
+        return {
+            "polarity": polarity,
+            "subjectivity": subjectivity,
+            "sentiment_class": sentiment_class,
+            "has_doubt": has_doubt,
+            "has_disinterest": has_disinterest,
+            "confidence": abs(polarity) if abs(polarity) > 0.1 else 0.5
+        }
+    except Exception as e:
+        logging.error(f"Error analyzing sentiment: {str(e)}")
+        return {
+            "polarity": 0.0,
+            "subjectivity": 0.0,
+            "sentiment_class": "neutral",
+            "has_doubt": False,
+            "has_disinterest": False,
+            "confidence": 0.0
+        }
+
+async def generate_ai_response(message: str, context: List[Dict[str, Any]] = None, prompt: str = None) -> str:
+    """Generate AI response using OpenAI"""
+    try:
+        if not prompt:
+            prompt = "Você é um assistente inteligente em português. Responda de forma útil e amigável."
+        
+        # Build conversation context
+        messages = [{"role": "system", "content": prompt}]
+        
+        if context:
+            for ctx in context[-5:]:  # Last 5 messages for context
+                if ctx.get("role") and ctx.get("content"):
+                    messages.append({"role": ctx["role"], "content": ctx["content"]})
+        
+        messages.append({"role": "user", "content": message})
+        
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",  # Using the faster, cheaper model
+            messages=messages,
+            max_tokens=500,
+            temperature=0.7
+        )
+        
+        return response.choices[0].message.content.strip()
+        
+    except Exception as e:
+        logging.error(f"Error generating AI response: {str(e)}")
+        return "Desculpe, não consegui processar sua mensagem no momento. Pode tentar novamente?"
+
+async def get_or_create_session(instance_name: str, contact_number: str) -> ConversationSession:
+    """Get existing conversation session or create new one"""
+    try:
+        # Check for existing active session
+        session_data = await db.sessions.find_one({
+            "instanceName": instance_name,
+            "contactNumber": contact_number,
+            "isActive": True
+        })
+        
+        if session_data:
+            return ConversationSession(**session_data)
+        
+        # Create new session
+        session = ConversationSession(
+            instanceName=instance_name,
+            contactNumber=contact_number
+        )
+        
+        await db.sessions.insert_one(session.dict())
+        return session
+        
+    except Exception as e:
+        logging.error(f"Error getting/creating session: {str(e)}")
+        # Return a default session if database fails
+        return ConversationSession(
+            instanceName=instance_name,
+            contactNumber=contact_number
+        )
+
+async def process_incoming_message(instance_name: str, contact_number: str, message_text: str):
+    """Process incoming message with AI and sentiment analysis"""
+    try:
+        # Get or create conversation session
+        session = await get_or_create_session(instance_name, contact_number)
+        
+        # Analyze sentiment
+        sentiment = await analyze_sentiment(message_text)
+        
+        # Generate AI response
+        context = session.context
+        ai_response = await generate_ai_response(message_text, context)
+        
+        # Update session context
+        session.context.append({
+            "role": "user",
+            "content": message_text,
+            "timestamp": datetime.utcnow().isoformat(),
+            "sentiment": sentiment
+        })
+        
+        session.context.append({
+            "role": "assistant", 
+            "content": ai_response,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+        session.lastActivity = datetime.utcnow()
+        session.sentimentAnalysis = sentiment
+        
+        # Save updated session
+        await db.sessions.update_one(
+            {"id": session.id},
+            {"$set": session.dict()},
+            upsert=True
+        )
+        
+        # Send AI response back
+        await send_evolution_message(instance_name, contact_number, {
+            "type": "text",
+            "content": ai_response
+        })
+        
+        # Check for triggers based on sentiment
+        await check_sentiment_triggers(instance_name, contact_number, sentiment, session)
+        
+        # Save AI response record
+        ai_response_record = AIResponse(
+            sessionId=session.id,
+            userMessage=message_text,
+            aiResponse=ai_response,
+            sentiment=sentiment
+        )
+        
+        await db.ai_responses.insert_one(ai_response_record.dict())
+        
+        return {"success": True, "response": ai_response, "sentiment": sentiment}
+        
+    except Exception as e:
+        logging.error(f"Error processing incoming message: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+async def check_sentiment_triggers(instance_name: str, contact_number: str, sentiment: Dict[str, float], session: ConversationSession):
+    """Check sentiment and trigger appropriate actions"""
+    try:
+        actions_triggered = []
+        
+        # Trigger for disinterest
+        if sentiment.get("has_disinterest", False):
+            # Send special offer or retention content
+            await send_evolution_message(instance_name, contact_number, {
+                "type": "text",
+                "content": "🎯 Espere! Tenho uma oferta especial para você. Que tal receber um desconto exclusivo?"
+            })
+            actions_triggered.append("disinterest_retention")
+        
+        # Trigger for confusion/doubt
+        elif sentiment.get("has_doubt", False):
+            # Send helpful content or video
+            await send_evolution_message(instance_name, contact_number, {
+                "type": "text", 
+                "content": "📺 Parece que você tem algumas dúvidas! Deixe-me enviar um vídeo explicativo que pode ajudar."
+            })
+            actions_triggered.append("doubt_help")
+        
+        # Trigger for very negative sentiment
+        elif sentiment.get("sentiment_class") == "negative" and sentiment.get("confidence", 0) > 0.7:
+            # Escalate to human or send empathy response
+            await send_evolution_message(instance_name, contact_number, {
+                "type": "text",
+                "content": "😔 Percebo que você pode estar frustrado. Posso transferir você para um atendente humano ou há algo específico que posso fazer para ajudar?"
+            })
+            actions_triggered.append("negative_escalation")
+        
+        return actions_triggered
+        
+    except Exception as e:
+        logging.error(f"Error checking sentiment triggers: {str(e)}")
+        return []
+
 # Flow Management Routes
 @api_router.post("/flows", response_model=Flow)
 async def create_flow(flow_data: FlowCreate):
