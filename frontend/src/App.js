@@ -140,6 +140,8 @@ const nodeTypes = {
   media: MediaNode,
   delay: DelayNode,
   trigger: TriggerNode,
+  ai: AINode,
+  conditional: ConditionalNode,
 };
 
 const initialNodes = [
