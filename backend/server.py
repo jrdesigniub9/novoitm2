@@ -723,11 +723,65 @@ async def create_instance(instance_name: str = Form(...)):
     await db.evolution_instances.insert_one(instance.dict())
     return instance
 
-@api_router.get("/evolution/instances", response_model=List[EvolutionInstance])
+@api_router.get("/evolution/instances")
 async def get_instances():
-    """Get all WhatsApp instances"""
-    instances = await db.evolution_instances.find().to_list(1000)
-    return [EvolutionInstance(**instance) for instance in instances]
+    """Get all WhatsApp instances from Evolution API and local database"""
+    try:
+        # Get instances from Evolution API
+        evolution_instances = await get_evolution_instances()
+        
+        # Get local database instances for additional info
+        local_instances = await db.evolution_instances.find().to_list(1000)
+        local_dict = {inst.get("instanceName"): inst for inst in local_instances}
+        
+        result_instances = []
+        
+        # If Evolution API returns instances, use them as primary source
+        if isinstance(evolution_instances, list) and evolution_instances:
+            for evo_inst in evolution_instances:
+                instance_name = evo_inst.get("instanceName") or evo_inst.get("instance", {}).get("instanceName")
+                if instance_name:
+                    # Get status from Evolution API
+                    status_data = await get_evolution_instance_status(instance_name)
+                    status = status_data.get("state", "disconnected")
+                    
+                    # Merge with local data if available
+                    local_data = local_dict.get(instance_name, {})
+                    
+                    instance = {
+                        "id": local_data.get("id", str(uuid.uuid4())),
+                        "instanceName": instance_name,
+                        "instanceKey": evo_inst.get("hash", local_data.get("instanceKey", "")),
+                        "qrCode": local_data.get("qrCode"),
+                        "status": status,
+                        "createdAt": local_data.get("createdAt", datetime.utcnow())
+                    }
+                    result_instances.append(instance)
+        else:
+            # Fallback to local database instances
+            for local_inst in local_instances:
+                instance_name = local_inst.get("instanceName")
+                if instance_name:
+                    # Try to get status from Evolution API
+                    status_data = await get_evolution_instance_status(instance_name)
+                    status = status_data.get("state", local_inst.get("status", "disconnected"))
+                    
+                    instance = {
+                        "id": local_inst.get("id", str(uuid.uuid4())),
+                        "instanceName": instance_name,
+                        "instanceKey": local_inst.get("instanceKey", ""),
+                        "qrCode": local_inst.get("qrCode"),
+                        "status": status,
+                        "createdAt": local_inst.get("createdAt", datetime.utcnow())
+                    }
+                    result_instances.append(instance)
+        
+        return result_instances
+        
+    except Exception as e:
+        logging.error(f"Error getting instances: {str(e)}")
+        # Return empty list on error rather than failing
+        return []
 
 @api_router.get("/evolution/instances/{instance_name}/qr")
 async def get_instance_qr(instance_name: str):
