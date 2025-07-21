@@ -1186,7 +1186,7 @@ async def evolution_webhook_handler(request: dict):
                     {"$set": {"processed": True}}
                 )
         
-        elif event == "messages.upsert":
+        elif event == "messages.upsert" or event == "MESSAGES_UPSERT":
             # Handle incoming messages and trigger appropriate flows
             messages = data.get("messages", [])
             for message in messages:
@@ -1194,15 +1194,25 @@ async def evolution_webhook_handler(request: dict):
                     # Extract contact info
                     contact_number = message.get("key", {}).get("remoteJid", "").split("@")[0]
                     
-                    # Extract message text
+                    # Extract message text with better support for different message types
                     message_text = None
                     message_content = message.get("message", {})
+                    
+                    # Check various message formats according to Evolution API structure
                     if "conversation" in message_content:
                         message_text = message_content["conversation"]
                     elif "extendedTextMessage" in message_content:
                         message_text = message_content["extendedTextMessage"].get("text")
                     elif "textMessage" in message_content:
                         message_text = message_content["textMessage"].get("text")
+                    elif "imageMessage" in message_content:
+                        message_text = message_content["imageMessage"].get("caption", "[Imagem recebida]")
+                    elif "videoMessage" in message_content:
+                        message_text = message_content["videoMessage"].get("caption", "[Vídeo recebido]")
+                    elif "audioMessage" in message_content:
+                        message_text = "[Áudio recebido]"
+                    elif "documentMessage" in message_content:
+                        message_text = f"[Documento recebido: {message_content['documentMessage'].get('fileName', 'arquivo')}]"
                     
                     if message_text and contact_number:
                         logging.info(f"Processing incoming message from {contact_number} on instance {instance_name}: {message_text}")
