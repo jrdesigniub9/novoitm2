@@ -155,7 +155,7 @@ const initialNodes = [
 
 const initialEdges = [];
 
-function FlowBuilder() {
+function FlowBuilder({ onBackToDashboard, instances, setInstances }) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [flows, setFlows] = useState([]);
