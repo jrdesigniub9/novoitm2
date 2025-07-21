@@ -192,9 +192,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Fixed Evolution API Integration"
-    - "Enhanced Instance Management"
-    - "Dashboard Landing Page"
+    - "Dashboard Flow Edit Fix"
+    - "Instance Management Modal Enhancement" 
+    - "AI Settings Simplification"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
