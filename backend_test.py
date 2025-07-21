@@ -266,9 +266,90 @@ class BackendTester:
         except Exception as e:
             self.log_result("Execute Flow", False, f"Error: {str(e)}")
     
+    def test_ai_integration(self):
+        """Test AI Integration Features"""
+        print("\n=== Testing AI Integration ===")
+        
+        # Test AI Settings - GET default settings
+        try:
+            response = self.session.get(f"{BACKEND_URL}/ai/settings")
+            if response.status_code == 200:
+                settings = response.json()
+                self.log_result("Get AI Settings", True, f"Default prompt configured: {bool(settings.get('defaultPrompt'))}")
+            else:
+                self.log_result("Get AI Settings", False, f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Get AI Settings", False, f"Error: {str(e)}")
+        
+        # Test AI Settings - POST update settings
+        try:
+            new_settings = {
+                "defaultPrompt": "Você é um assistente especializado em vendas. Seja persuasivo e amigável.",
+                "enableSentimentAnalysis": True,
+                "enableAutoResponse": True,
+                "confidenceThreshold": 0.6,
+                "maxContextMessages": 10,
+                "disinterestTriggers": ["não quero", "desistir", "cancelar", "chato", "pare", "parar"],
+                "doubtTriggers": ["dúvida", "não entendi", "confuso", "como", "o que", "por que"]
+            }
+            response = self.session.post(f"{BACKEND_URL}/ai/settings", json=new_settings)
+            if response.status_code == 200:
+                result = response.json()
+                self.log_result("Update AI Settings", True, f"Settings updated: {result.get('success', False)}")
+            else:
+                self.log_result("Update AI Settings", False, f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Update AI Settings", False, f"Error: {str(e)}")
+        
+        # Test AI Response Generation with different sentiment scenarios
+        test_messages = [
+            ("Adorei o produto! Quero comprar mais!", "positive"),
+            ("Não quero mais isso, cancelar tudo", "negative_disinterest"),
+            ("Não entendi como funciona, pode explicar?", "confused"),
+            ("Quanto custa o produto básico?", "neutral")
+        ]
+        
+        for message, scenario in test_messages:
+            try:
+                params = {"message": message}
+                response = self.session.post(f"{BACKEND_URL}/ai/test", params=params)
+                if response.status_code == 200:
+                    result = response.json()
+                    sentiment = result.get("sentiment", {})
+                    ai_response = result.get("ai_response", "")
+                    self.log_result(f"AI Test ({scenario})", True, 
+                                  f"Sentiment: {sentiment.get('sentiment_class', 'unknown')}, "
+                                  f"Response length: {len(ai_response)} chars")
+                else:
+                    self.log_result(f"AI Test ({scenario})", False, f"Status: {response.status_code}")
+            except Exception as e:
+                self.log_result(f"AI Test ({scenario})", False, f"Error: {str(e)}")
+        
+        # Test AI Sessions endpoint
+        try:
+            response = self.session.get(f"{BACKEND_URL}/ai/sessions")
+            if response.status_code == 200:
+                sessions = response.json()
+                self.log_result("Get AI Sessions", True, f"Found {len(sessions)} sessions")
+            else:
+                self.log_result("Get AI Sessions", False, f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Get AI Sessions", False, f"Error: {str(e)}")
+        
+        # Test AI Responses endpoint
+        try:
+            response = self.session.get(f"{BACKEND_URL}/ai/responses?limit=10")
+            if response.status_code == 200:
+                responses = response.json()
+                self.log_result("Get AI Responses", True, f"Found {len(responses)} responses")
+            else:
+                self.log_result("Get AI Responses", False, f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Get AI Responses", False, f"Error: {str(e)}")
+
     def test_webhook_processing(self):
-        """Test Webhook Processing"""
-        print("\n=== Testing Webhook Processing ===")
+        """Test Webhook Processing with AI Integration"""
+        print("\n=== Testing Webhook Processing with AI ===")
         
         # Test webhook with QR code update
         webhook_data = {
@@ -307,6 +388,32 @@ class BackendTester:
                 self.log_result("Webhook Connection Update", False, f"Status: {response.status_code}")
         except Exception as e:
             self.log_result("Webhook Connection Update", False, f"Error: {str(e)}")
+        
+        # Test webhook with incoming message (AI processing)
+        webhook_data = {
+            "type": "messages.upsert",
+            "instance": TEST_INSTANCE_NAME,
+            "data": {
+                "key": {
+                    "remoteJid": "5511999999999@s.whatsapp.net",
+                    "fromMe": False,
+                    "id": "test_message_id"
+                },
+                "message": {
+                    "conversation": "Olá! Gostaria de saber mais sobre seus produtos."
+                }
+            }
+        }
+        
+        try:
+            response = self.session.post(f"{BACKEND_URL}/evolution/webhook", json=webhook_data)
+            if response.status_code == 200:
+                result = response.json()
+                self.log_result("Webhook Message Processing (AI)", True, f"Response: {result}")
+            else:
+                self.log_result("Webhook Message Processing (AI)", False, f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Webhook Message Processing (AI)", False, f"Error: {str(e)}")
     
     def cleanup(self):
         """Clean up test data"""
