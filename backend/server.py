@@ -86,6 +86,7 @@ class FlowUpdate(BaseModel):
     nodes: Optional[List[FlowNode]] = None
     edges: Optional[List[FlowEdge]] = None
     isActive: Optional[bool] = None
+    selectedInstance: Optional[str] = None  # WhatsApp instance to use for this flow
 
 class FlowExecution(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
