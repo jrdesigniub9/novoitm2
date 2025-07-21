@@ -99,6 +99,24 @@ class EvolutionInstance(BaseModel):
     status: str = "disconnected"
     createdAt: datetime = Field(default_factory=datetime.utcnow)
 
+class ConversationSession(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    instanceName: str
+    contactNumber: str
+    context: List[Dict[str, Any]] = []
+    lastActivity: datetime = Field(default_factory=datetime.utcnow)
+    isActive: bool = True
+    sentimentAnalysis: Optional[Dict[str, Any]] = None
+
+class AIResponse(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    sessionId: str
+    userMessage: str
+    aiResponse: str
+    sentiment: Dict[str, float]
+    triggeredActions: List[str] = []
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
 # Evolution API Helper Functions
 async def create_evolution_instance(instance_name: str):
     """Create a new WhatsApp instance in Evolution API"""
