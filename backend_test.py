@@ -477,7 +477,10 @@ class BackendTester:
 
 if __name__ == "__main__":
     tester = BackendTester()
-    passed, failed = tester.run_all_tests()
-    
-    # Exit with appropriate code
-    exit(0 if failed == 0 else 1)
+    result = tester.run_all_tests()
+    if result:
+        passed, failed = result
+        # Exit with appropriate code
+        exit(0 if failed == 0 else 1)
+    else:
+        exit(1)
