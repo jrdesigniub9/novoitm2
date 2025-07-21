@@ -150,6 +150,18 @@ backend:
         agent: "testing"
         comment: "✅ ENHANCED INSTANCE MANAGEMENT WORKING PERFECTLY: All new helper functions operational. get_evolution_instances() successfully fetches instances from Evolution API, get_evolution_instance_status() retrieves connection states correctly, and the updated get_instances endpoint properly merges Evolution API data with local database information. Instance management enhancements are fully functional and production-ready."
 
+  - task: "Interface Seleção de Instâncias WhatsApp"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTADO: Interface completa para seleção de instância WhatsApp por fluxo. Adicionado: (1) Campo selectedInstance no estado do FlowBuilder (2) Dropdown de seleção 'Instância WhatsApp' na seção Configurações (3) Função saveFlow atualizada para incluir selectedInstance (4) Visualização da instância conectada nos cards de fluxo no Dashboard (5) Limpeza de estado ao criar novo fluxo. Sistema agora permite cada fluxo escolher qual conta WhatsApp usar."
+
 frontend:
   - task: "Dashboard Landing Page"
     implemented: true
