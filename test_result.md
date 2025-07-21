@@ -207,6 +207,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Enhanced Evolution API Instance Creation"
     - "Dashboard Flow Edit Fix"
     - "Instance Management Modal Enhancement" 
     - "AI Settings Simplification"
