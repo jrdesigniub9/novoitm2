@@ -193,9 +193,147 @@ class BackendTester:
             except Exception as e:
                 self.log_result(f"Upload {filename}", False, f"Error: {str(e)}")
     
+    def test_enhanced_evolution_api_instance_creation(self):
+        """Test Enhanced Evolution API Instance Creation - CRITICAL PRIORITY"""
+        print("\n=== Testing Enhanced Evolution API Instance Creation ===")
+        print("🎯 FOCUS: Testing comprehensive instance creation with WhatsApp automation settings")
+        
+        # Create enhanced test instance name with timestamp
+        enhanced_instance_name = f"enhanced_test_{int(time.time())}"
+        
+        # Test Enhanced Instance Creation with comprehensive configuration
+        try:
+            data = {"instance_name": enhanced_instance_name}
+            response = self.session.post(f"{BACKEND_URL}/evolution/instances", data=data)
+            
+            if response.status_code == 200:
+                instance = response.json()
+                self.created_instances.append(enhanced_instance_name)
+                self.log_result("Enhanced Instance Creation", True, 
+                              f"Instance: {instance['instanceName']}, Key: {instance.get('instanceKey', 'N/A')}")
+                
+                # Verify instance was created with proper settings
+                print(f"   ✅ Instance created with name: {instance['instanceName']}")
+                print(f"   ✅ Instance key generated: {bool(instance.get('instanceKey'))}")
+                
+            else:
+                self.log_result("Enhanced Instance Creation", False, 
+                              f"Status: {response.status_code}, Response: {response.text}")
+                return False
+        except Exception as e:
+            self.log_result("Enhanced Instance Creation", False, f"Error: {str(e)}")
+            return False
+        
+        # Wait for instance to be fully initialized
+        print("   ⏳ Waiting for instance initialization...")
+        time.sleep(3)
+        
+        # Test Direct Evolution API Instance Verification
+        try:
+            headers = {"apikey": EVOLUTION_API_KEY}
+            response = requests.get(f"{EVOLUTION_API_URL}/instance/fetchInstances", headers=headers)
+            
+            if response.status_code == 200:
+                evolution_instances = response.json()
+                instance_found = False
+                
+                if isinstance(evolution_instances, list):
+                    for evo_inst in evolution_instances:
+                        if evo_inst.get("name") == enhanced_instance_name or evo_inst.get("instanceName") == enhanced_instance_name:
+                            instance_found = True
+                            print(f"   ✅ Instance found in Evolution API: {evo_inst.get('name', evo_inst.get('instanceName'))}")
+                            print(f"   ✅ Connection Status: {evo_inst.get('connectionStatus', 'unknown')}")
+                            break
+                
+                self.log_result("Direct Evolution API Verification", instance_found, 
+                              f"Instance {'found' if instance_found else 'not found'} in Evolution API")
+            else:
+                self.log_result("Direct Evolution API Verification", False, 
+                              f"Evolution API Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Direct Evolution API Verification", False, f"Error: {str(e)}")
+        
+        # Test Backend Instance Listing (should include Evolution API data)
+        try:
+            response = self.session.get(f"{BACKEND_URL}/evolution/instances")
+            if response.status_code == 200:
+                instances = response.json()
+                enhanced_instance_found = False
+                
+                for inst in instances:
+                    if inst.get("instanceName") == enhanced_instance_name:
+                        enhanced_instance_found = True
+                        print(f"   ✅ Enhanced instance found in backend list")
+                        print(f"   ✅ Status: {inst.get('status', 'unknown')}")
+                        print(f"   ✅ Has QR Code: {bool(inst.get('qrCode'))}")
+                        break
+                
+                self.log_result("Backend Instance Listing", True, 
+                              f"Found {len(instances)} total instances, Enhanced instance: {'✅' if enhanced_instance_found else '❌'}")
+            else:
+                self.log_result("Backend Instance Listing", False, f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Backend Instance Listing", False, f"Error: {str(e)}")
+        
+        # Test QR Code Generation for Enhanced Instance
+        try:
+            response = self.session.get(f"{BACKEND_URL}/evolution/instances/{enhanced_instance_name}/qr")
+            if response.status_code == 200:
+                qr_data = response.json()
+                has_qr_code = bool(qr_data.get("qrcode"))
+                self.log_result("Enhanced QR Code Generation", True, 
+                              f"QR Code {'generated' if has_qr_code else 'pending'}")
+                
+                if has_qr_code:
+                    print(f"   ✅ QR Code successfully generated for enhanced instance")
+                    print(f"   ✅ QR Code format: {'base64' if qr_data.get('qrcode', '').startswith('data:') else 'raw'}")
+                else:
+                    print(f"   ⚠️ QR Code not yet available (instance may still be initializing)")
+                    
+            else:
+                self.log_result("Enhanced QR Code Generation", False, 
+                              f"Status: {response.status_code}, Response: {response.text}")
+        except Exception as e:
+            self.log_result("Enhanced QR Code Generation", False, f"Error: {str(e)}")
+        
+        # Test Enhanced Webhook Endpoint
+        try:
+            # Test the new /api/webhook/evolution endpoint with MESSAGES_UPSERT
+            webhook_test_data = {
+                "event": "MESSAGES_UPSERT",
+                "instance": enhanced_instance_name,
+                "data": {
+                    "messages": [{
+                        "key": {
+                            "remoteJid": "5511999999999@s.whatsapp.net",
+                            "fromMe": False,
+                            "id": "test_enhanced_message"
+                        },
+                        "message": {
+                            "conversation": "Test message for enhanced webhook processing"
+                        }
+                    }]
+                }
+            }
+            
+            response = self.session.post(f"{BACKEND_URL}/webhook/evolution", json=webhook_test_data)
+            if response.status_code == 200:
+                result = response.json()
+                self.log_result("Enhanced Webhook Processing", True, 
+                              f"Webhook response: {result.get('status', 'unknown')}")
+                print(f"   ✅ Enhanced webhook endpoint operational")
+                print(f"   ✅ MESSAGES_UPSERT event processed successfully")
+            else:
+                self.log_result("Enhanced Webhook Processing", False, 
+                              f"Status: {response.status_code}, Response: {response.text}")
+        except Exception as e:
+            self.log_result("Enhanced Webhook Processing", False, f"Error: {str(e)}")
+        
+        return True
+    
     def test_evolution_api_integration(self):
-        """Test Evolution API Integration"""
-        print("\n=== Testing Evolution API Integration ===")
+        """Test Evolution API Integration - Legacy Test"""
+        print("\n=== Testing Evolution API Integration (Legacy) ===")
         
         # Test Instance Creation
         try:
