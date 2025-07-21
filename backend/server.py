@@ -130,9 +130,7 @@ async def create_evolution_instance(instance_name: str, webhook_url: str = None)
     
     # Use provided webhook URL or default to our own backend
     if not webhook_url:
-        webhook_url = f"{EVOLUTION_API_URL.replace('apiwhatsapp.maapletech.com.br', 'your-domain.com')}/api/webhook/evolution"
-        # For local testing, you might want to use ngrok or similar
-        # webhook_url = "https://your-ngrok-url.ngrok.io/api/webhook/evolution"
+        webhook_url = f"{WEBHOOK_BASE_URL}/api/webhook/evolution"
     
     payload = {
         "instanceName": instance_name,
