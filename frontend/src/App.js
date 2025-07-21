@@ -256,6 +256,11 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
     }
   };
 
+  const openFlowLogs = (flow) => {
+    setSelectedFlowForLogs(flow);
+    setShowFlowLogsModal(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
