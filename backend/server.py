@@ -1250,6 +1250,158 @@ async def process_message_event(instance_name: str, message_data: Dict[str, Any]
     except Exception as e:
         logging.error(f"Error processing message event: {str(e)}")
 
+# Logging and Monitoring Routes
+@api_router.get("/flows/{flow_id}/logs")
+async def get_flow_logs(flow_id: str, limit: int = 100, level: str = None):
+    """Get logs for a specific flow"""
+    try:
+        query = {"flowId": flow_id}
+        if level:
+            query["level"] = level
+            
+        cursor = db.flow_logs.find(query).sort("timestamp", -1).limit(limit)
+        logs = []
+        async for log in cursor:
+            if "_id" in log:
+                del log["_id"]
+            logs.append(log)
+        return logs
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to get flow logs: {str(e)}")
+
+@api_router.get("/flows/{flow_id}/messages")
+async def get_flow_messages(flow_id: str, limit: int = 100):
+    """Get messages for a specific flow"""
+    try:
+        cursor = db.flow_messages.find({"flowId": flow_id}).sort("timestamp", -1).limit(limit)
+        messages = []
+        async for message in cursor:
+            if "_id" in message:
+                del message["_id"]
+            messages.append(message)
+        return messages
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to get flow messages: {str(e)}")
+
+@api_router.get("/flows/{flow_id}/executions")
+async def get_flow_executions(flow_id: str, limit: int = 50):
+    """Get execution history for a specific flow"""
+    try:
+        cursor = db.flow_executions.find({"flowId": flow_id}).sort("startedAt", -1).limit(limit)
+        executions = []
+        async for execution in cursor:
+            if "_id" in execution:
+                del execution["_id"]
+            executions.append(execution)
+        return executions
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to get flow executions: {str(e)}")
+
+# Test Webhook Routes
+@api_router.post("/test-webhook")
+async def test_webhook_handler(payload: dict = None):
+    """Test webhook endpoint to receive any payload"""
+    try:
+        # Get or create test webhook settings
+        settings = await db.test_webhook_settings.find_one({})
+        if not settings:
+            settings = TestWebhookSettings().dict()
+            await db.test_webhook_settings.insert_one(settings)
+        
+        # Only log if enabled
+        if settings.get("logsEnabled", True):
+            await log_webhook_event(
+                event_type="test",
+                event="test_webhook_received",
+                payload=payload or {},
+                headers={},
+                processed=True
+            )
+        
+        return {
+            "message": "Test webhook received successfully",
+            "timestamp": datetime.utcnow(),
+            "payload_size": len(str(payload)) if payload else 0,
+            "logs_enabled": settings.get("logsEnabled", True)
+        }
+    except Exception as e:
+        logging.error(f"Error in test webhook: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Test webhook error: {str(e)}")
+
+@api_router.get("/test-webhook/logs")
+async def get_test_webhook_logs(limit: int = 100):
+    """Get test webhook logs"""
+    try:
+        cursor = db.webhook_logs.find({"type": "test"}).sort("timestamp", -1).limit(limit)
+        logs = []
+        async for log in cursor:
+            if "_id" in log:
+                del log["_id"]
+            logs.append(log)
+        return logs
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to get test webhook logs: {str(e)}")
+
+@api_router.get("/test-webhook/settings")
+async def get_test_webhook_settings():
+    """Get test webhook settings"""
+    try:
+        settings = await db.test_webhook_settings.find_one({})
+        if not settings:
+            settings = TestWebhookSettings().dict()
+            await db.test_webhook_settings.insert_one(settings)
+        else:
+            if "_id" in settings:
+                del settings["_id"]
+        return settings
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to get test webhook settings: {str(e)}")
+
+@api_router.put("/test-webhook/settings")
+async def update_test_webhook_settings(enabled: bool = None, logs_enabled: bool = None, description: str = None):
+    """Update test webhook settings"""
+    try:
+        settings = await db.test_webhook_settings.find_one({})
+        if not settings:
+            settings = TestWebhookSettings().dict()
+            await db.test_webhook_settings.insert_one(settings)
+        
+        update_data = {}
+        if enabled is not None:
+            update_data["enabled"] = enabled
+        if logs_enabled is not None:
+            update_data["logsEnabled"] = logs_enabled
+        if description is not None:
+            update_data["description"] = description
+        
+        if update_data:
+            await db.test_webhook_settings.update_one({}, {"$set": update_data})
+        
+        updated_settings = await db.test_webhook_settings.find_one({})
+        if "_id" in updated_settings:
+            del updated_settings["_id"]
+        return updated_settings
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to update test webhook settings: {str(e)}")
+
+@api_router.get("/webhook/logs")
+async def get_webhook_logs(limit: int = 100, event_type: str = None):
+    """Get all webhook logs"""
+    try:
+        query = {}
+        if event_type:
+            query["type"] = event_type
+            
+        cursor = db.webhook_logs.find(query).sort("timestamp", -1).limit(limit)
+        logs = []
+        async for log in cursor:
+            if "_id" in log:
+                del log["_id"]
+            logs.append(log)
+        return logs
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to get webhook logs: {str(e)}")
+
 # Test route
 @api_router.get("/")
 async def root():
