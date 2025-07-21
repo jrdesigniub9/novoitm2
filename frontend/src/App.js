@@ -474,6 +474,12 @@ function FlowBuilder({ onBackToDashboard, instances, setInstances, flowToLoad })
       setNodes(flowToLoad.nodes || []);
       setEdges(flowToLoad.edges || []);
       setSelectedInstance(flowToLoad.selectedInstance || ''); // Carregar instância selecionada
+    } else if (flowToLoad === null) {
+      // Novo fluxo - limpar estados
+      setCurrentFlow(null);
+      setSelectedInstance('');
+      setNodes(initialNodes);
+      setEdges(initialEdges);
     }
   }, [flowToLoad, setNodes, setEdges]);
 
