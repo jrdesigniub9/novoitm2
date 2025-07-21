@@ -789,12 +789,14 @@ async def execute_flow_from_node(flow: Flow, start_node: FlowNode, recipient: st
                 media_url = current_node.data.get("mediaUrl", "")
                 media_type = current_node.data.get("mediaType", "image")
                 caption = current_node.data.get("caption", "")
+                file_name = current_node.data.get("fileName", f"media.{media_type}")
                 
                 message_data = {
                     "type": "media",
                     "mediaType": media_type,
                     "content": media_url,
-                    "caption": caption
+                    "caption": caption,
+                    "fileName": file_name
                 }
                 
                 # Log media message
@@ -803,7 +805,23 @@ async def execute_flow_from_node(flow: Flow, start_node: FlowNode, recipient: st
                 await log_flow_event(flow.id, execution.id, "info", f"Mídia enviada: {media_type}", {
                     "media_type": media_type,
                     "caption": caption,
-                    "media_url": media_url
+                    "media_url": media_url,
+                    "file_name": file_name
+                }, current_node.id)
+                
+            elif current_node.type == "audio":
+                audio_url = current_node.data.get("audioUrl", "")
+                
+                message_data = {
+                    "type": "audio",
+                    "content": audio_url
+                }
+                
+                # Log audio message
+                await log_flow_message(flow.id, instance_name, recipient, "[ÁUDIO]", "audio", "outgoing", True)
+                await send_evolution_message(instance_name, recipient, message_data)
+                await log_flow_event(flow.id, execution.id, "info", f"Áudio enviado", {
+                    "audio_url": audio_url
                 }, current_node.id)
                 
             elif current_node.type == "delay":
