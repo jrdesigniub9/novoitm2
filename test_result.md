@@ -148,7 +148,31 @@ frontend:
         agent: "main"
         comment: "MAJOR UI RESTRUCTURE: Created beautiful dashboard landing page with stats cards, quick actions, and flows management. App now shows Dashboard first instead of going directly to FlowBuilder. Added navigation between Dashboard and FlowBuilder. Dashboard includes instance management, AI settings, and flow overview."
 
-  - task: "Improved Navigation Flow"
+  - task: "Dashboard Flow Edit Fix"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "FIXED: Modified Dashboard flow edit button to properly pass flow data to FlowBuilder. Updated onOpenFlowBuilder to accept flow parameter and load specific flow automatically. Fixed flow loading mechanism between components."
+
+  - task: "Instance Management Modal Enhancement"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "ENHANCED: Improved InstanceModal with better error handling, proper instance display with fallback for empty lists, and better handling of instance data structure."
+
+  - task: "AI Settings Simplification"
     implemented: true
     working: "NA"
     file: "App.js"
@@ -158,7 +182,7 @@ frontend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "App now starts with clean dashboard instead of direct flow builder. Added back button to return to dashboard from flow builder. Improved user experience with proper flow between screens."
+        comment: "REMOVED: Eliminated 'Palavras que Indicam Desinteresse' and 'Palavras que Indicam Dúvidas' sections from AI settings as requested. Added informational note about using manual condition nodes instead. Simplified AI settings to focus on core functionality."
 
 metadata:
   created_by: "main_agent"
