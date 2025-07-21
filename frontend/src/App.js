@@ -549,6 +549,7 @@ function FlowBuilder({ onBackToDashboard, instances, setInstances, flowToLoad })
     const flowData = {
       name: currentFlow?.name || `Fluxo ${flows.length + 1}`,
       description: currentFlow?.description || '',
+      selectedInstance: selectedInstance || null, // Incluir instância selecionada
       nodes,
       edges,
     };
