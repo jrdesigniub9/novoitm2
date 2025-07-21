@@ -14,7 +14,7 @@ from typing import Dict, Any, List
 import os
 
 # Configuration
-BACKEND_URL = "https://159d4228-a9ef-4d1b-9460-914863a370f4.preview.emergentagent.com/api"
+BACKEND_URL = "https://69642194-6693-4e11-a5a5-754841337cd3.preview.emergentagent.com/api"
 EVOLUTION_API_URL = "http://apiwhatsapp.maapletech.com.br"
 EVOLUTION_API_KEY = "322683C4C655415CAAFFFE10F7D57E11"
 
@@ -518,7 +518,7 @@ class BackendTester:
                             # Check if webhook URL contains the correct backend URL
                             webhook_config = evo_inst.get("webhook", {})
                             webhook_url = webhook_config.get("url", "")
-                            expected_webhook = "https://159d4228-a9ef-4d1b-9460-914863a370f4.preview.emergentagent.com/api/webhook/evolution"
+                            expected_webhook = "https://69642194-6693-4e11-a5a5-754841337cd3.preview.emergentagent.com/api/webhook/evolution"
                             
                             if webhook_url == expected_webhook:
                                 webhook_verified = True
