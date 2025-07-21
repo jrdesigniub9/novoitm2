@@ -1154,7 +1154,7 @@ async def evolution_webhook_handler(request: dict):
             processed=False
         )
         
-        if event == "qrcode.updated":
+        if event == "qrcode.updated" or event == "QRCODE_UPDATED":
             # Handle QR code updates
             qr_code = data.get("qrcode", {}).get("base64")
             if qr_code:
@@ -1170,7 +1170,7 @@ async def evolution_webhook_handler(request: dict):
                     {"$set": {"processed": True}}
                 )
         
-        elif event == "connection.update":
+        elif event == "connection.update" or event == "CONNECTION_UPDATE":
             # Handle connection status updates  
             state = data.get("state")
             if state:
