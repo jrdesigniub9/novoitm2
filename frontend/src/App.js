@@ -537,6 +537,15 @@ function FlowBuilder() {
           onExecute={executeFlow}
         />
       )}
+
+      {/* AI Settings Modal */}
+      {showAISettingsModal && (
+        <AISettingsModal
+          settings={aiSettings}
+          onClose={() => setShowAISettingsModal(false)}
+          onSave={saveAISettings}
+        />
+      )}
     </div>
   );
 }
