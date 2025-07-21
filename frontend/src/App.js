@@ -166,6 +166,9 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
   const [flows, setFlows] = useState([]);
   const [showInstanceModal, setShowInstanceModal] = useState(false);
   const [showAISettingsModal, setShowAISettingsModal] = useState(false);
+  const [showFlowLogsModal, setShowFlowLogsModal] = useState(false);
+  const [showTestWebhookModal, setShowTestWebhookModal] = useState(false);
+  const [selectedFlowForLogs, setSelectedFlowForLogs] = useState(null);
   const [qrCode, setQrCode] = useState(null);
   const [aiSettings, setAiSettings] = useState(null);
 
