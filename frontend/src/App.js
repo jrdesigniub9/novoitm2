@@ -330,7 +330,7 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
         {/* Quick Actions */}
         <div className="bg-white rounded-2xl shadow-sm p-8 mb-8 border border-gray-100">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Ações Rápidas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <button
               onClick={onOpenFlowBuilder}
               className="flex flex-col items-center gap-3 p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
@@ -356,11 +356,27 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
             </button>
 
             <button
+              onClick={() => setShowTestWebhookModal(true)}
+              className="flex flex-col items-center gap-3 p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105"
+            >
+              <Monitor className="w-8 h-8" />
+              <span className="font-medium">Webhook Teste</span>
+            </button>
+
+            <button
               onClick={loadFlows}
               className="flex flex-col items-center gap-3 p-6 bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 transform hover:scale-105"
             >
-              <Play className="w-8 h-8" />
+              <RefreshCw className="w-8 h-8" />
               <span className="font-medium">Atualizar Dados</span>
+            </button>
+
+            <button
+              onClick={() => window.open(`${API}/webhook/logs`, '_blank')}
+              className="flex flex-col items-center gap-3 p-6 bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-xl hover:from-teal-600 hover:to-teal-700 transition-all duration-200 transform hover:scale-105"
+            >
+              <Activity className="w-8 h-8" />
+              <span className="font-medium">Logs Sistema</span>
             </button>
           </div>
         </div>
