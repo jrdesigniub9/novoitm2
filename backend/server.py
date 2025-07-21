@@ -69,6 +69,7 @@ class Flow(BaseModel):
     nodes: List[FlowNode] = []
     edges: List[FlowEdge] = []
     isActive: bool = False
+    selectedInstance: Optional[str] = None  # WhatsApp instance to use for this flow
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
