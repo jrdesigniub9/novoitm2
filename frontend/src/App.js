@@ -8,7 +8,9 @@ import ReactFlow, {
   useEdgesState,
   Connection,
   Edge,
-  Node
+  Node,
+  Handle,
+  Position
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import './App.css';
@@ -24,7 +26,10 @@ import {
   Clock,
   Smartphone,
   QrCode,
-  Settings
+  Settings,
+  Bot,
+  Brain,
+  Zap
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
