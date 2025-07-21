@@ -1097,9 +1097,24 @@ const AISettingsModal = ({ settings, onClose, onSave }) => {
 };
 
 function App() {
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' or 'flowbuilder'
+  const [instances, setInstances] = useState([]);
+
   return (
     <div className="App">
-      <FlowBuilder />
+      {currentView === 'dashboard' ? (
+        <Dashboard 
+          onOpenFlowBuilder={() => setCurrentView('flowbuilder')}
+          instances={instances}
+          setInstances={setInstances}
+        />
+      ) : (
+        <FlowBuilder 
+          onBackToDashboard={() => setCurrentView('dashboard')}
+          instances={instances}
+          setInstances={setInstances}
+        />
+      )}
     </div>
   );
 }
