@@ -715,10 +715,22 @@ async def process_flow_triggers(instance_name: str, contact_number: str, message
 async def execute_flow_from_node(flow: Flow, start_node: FlowNode, recipient: str, instance_name: str, execution: FlowExecution):
     """Execute flow starting from a specific node"""
     try:
+        await log_flow_event(flow.id, execution.id, "info", f"Iniciando execução do fluxo '{flow.name}'", {
+            "recipient": recipient,
+            "instance": instance_name,
+            "start_node": start_node.id
+        })
+        
         current_node = start_node
         
         # Execute nodes sequentially
         while current_node:
+            # Log node execution start
+            await log_flow_event(flow.id, execution.id, "info", f"Executando nó: {current_node.type}", {
+                "node_id": current_node.id,
+                "node_data": current_node.data
+            }, current_node.id)
+            
             execution.log.append({
                 "nodeId": current_node.id,
                 "nodeType": current_node.type,
@@ -728,47 +740,87 @@ async def execute_flow_from_node(flow: Flow, start_node: FlowNode, recipient: st
             
             # Process current node
             if current_node.type == "message":
+                message_content = current_node.data.get("message", "")
                 message_data = {
                     "type": "text",
-                    "content": current_node.data.get("message", "")
+                    "content": message_content
                 }
+                
+                # Log outgoing message
+                await log_flow_message(flow.id, instance_name, recipient, message_content, "text", "outgoing", True)
                 await send_evolution_message(instance_name, recipient, message_data)
+                await log_flow_event(flow.id, execution.id, "info", f"Mensagem enviada: {message_content[:50]}...", {
+                    "recipient": recipient,
+                    "message_length": len(message_content)
+                }, current_node.id)
                 
             elif current_node.type == "media":
+                media_url = current_node.data.get("mediaUrl", "")
+                media_type = current_node.data.get("mediaType", "image")
+                caption = current_node.data.get("caption", "")
+                
                 message_data = {
                     "type": "media",
-                    "mediaType": current_node.data.get("mediaType", "image"),
-                    "content": current_node.data.get("mediaUrl", ""),
-                    "caption": current_node.data.get("caption", "")
+                    "mediaType": media_type,
+                    "content": media_url,
+                    "caption": caption
                 }
+                
+                # Log media message
+                await log_flow_message(flow.id, instance_name, recipient, caption or f"[{media_type.upper()}]", media_type, "outgoing", True)
                 await send_evolution_message(instance_name, recipient, message_data)
+                await log_flow_event(flow.id, execution.id, "info", f"Mídia enviada: {media_type}", {
+                    "media_type": media_type,
+                    "caption": caption,
+                    "media_url": media_url
+                }, current_node.id)
                 
             elif current_node.type == "delay":
                 delay_seconds = current_node.data.get("seconds", 1)
+                await log_flow_event(flow.id, execution.id, "info", f"Aguardando {delay_seconds} segundos", {
+                    "delay_seconds": delay_seconds
+                }, current_node.id)
                 await asyncio.sleep(delay_seconds)
                 
             elif current_node.type == "condition":
                 # Handle conditional logic (for future implementation)
-                pass
+                await log_flow_event(flow.id, execution.id, "warning", "Nó de condição não implementado", {}, current_node.id)
             
             execution.log[-1]["status"] = "completed"
+            await log_flow_event(flow.id, execution.id, "info", f"Nó concluído: {current_node.type}", {
+                "node_id": current_node.id
+            }, current_node.id)
             
             # Find next node
             next_edges = [edge for edge in flow.edges if edge.source == current_node.id]
             if next_edges:
                 next_node_id = next_edges[0].target
                 current_node = next((node for node in flow.nodes if node.id == next_node_id), None)
+                if current_node:
+                    await log_flow_event(flow.id, execution.id, "debug", f"Próximo nó: {current_node.id}", {
+                        "current_node": current_node.id,
+                        "node_type": current_node.type
+                    })
             else:
                 current_node = None
+                await log_flow_event(flow.id, execution.id, "debug", "Não há próximo nó - fim do fluxo", {})
         
         execution.status = "completed"
         execution.completedAt = datetime.utcnow()
+        await log_flow_event(flow.id, execution.id, "info", f"Execução do fluxo concluída com sucesso", {
+            "duration_seconds": (execution.completedAt - execution.startedAt).total_seconds(),
+            "nodes_executed": len(execution.log)
+        })
         
     except Exception as e:
         execution.status = "failed"
         execution.log.append({
             "error": str(e),
             "timestamp": datetime.utcnow()
+        })
+        await log_flow_event(flow.id, execution.id, "error", f"Erro na execução do fluxo: {str(e)}", {
+            "error": str(e),
+            "error_type": type(e).__name__
         })
         raise e
 
