@@ -118,16 +118,68 @@ class AIResponse(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 # Evolution API Helper Functions
-async def create_evolution_instance(instance_name: str):
-    """Create a new WhatsApp instance in Evolution API following official documentation"""
+async def create_evolution_instance(instance_name: str, webhook_url: str = None):
+    """Create a new WhatsApp instance in Evolution API following official documentation with full configuration"""
     headers = {
         "apikey": EVOLUTION_API_KEY,
         "Content-Type": "application/json"
     }
+    
+    # Use provided webhook URL or default to our own backend
+    if not webhook_url:
+        webhook_url = f"{EVOLUTION_API_URL.replace('apiwhatsapp.maapletech.com.br', 'your-domain.com')}/api/webhook/evolution"
+        # For local testing, you might want to use ngrok or similar
+        # webhook_url = "https://your-ngrok-url.ngrok.io/api/webhook/evolution"
+    
     payload = {
         "instanceName": instance_name,
         "qrcode": True,
-        "integration": "WHATSAPP-BAILEYS"
+        "integration": "WHATSAPP-BAILEYS",
+        # WhatsApp Settings as per user requirements
+        "rejectCall": True,
+        "msgCall": "Desculpe, não aceito chamadas. Por favor, envie uma mensagem de texto.",
+        "groupsIgnore": True,
+        "alwaysOnline": True,
+        "readMessages": False,
+        "readStatus": False,
+        "syncFullHistory": False,
+        # Webhook Configuration with MESSAGES_UPSERT enabled
+        "webhook": {
+            "enabled": True,
+            "url": webhook_url,
+            "byEvents": False,
+            "base64": True,
+            "headers": {
+                "authorization": f"Bearer {EVOLUTION_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            "events": [
+                "APPLICATION_STARTUP",
+                "QRCODE_UPDATED", 
+                "MESSAGES_SET",
+                "MESSAGES_UPSERT",  # This is critical for receiving incoming messages
+                "MESSAGES_UPDATE",
+                "MESSAGES_DELETE",
+                "SEND_MESSAGE",
+                "CONTACTS_SET",
+                "CONTACTS_UPSERT",
+                "CONTACTS_UPDATE",
+                "PRESENCE_UPDATE",
+                "CHATS_SET",
+                "CHATS_UPSERT",
+                "CHATS_UPDATE",
+                "CHATS_DELETE",
+                "GROUPS_UPSERT",
+                "GROUP_UPDATE",
+                "GROUP_PARTICIPANTS_UPDATE",
+                "CONNECTION_UPDATE",
+                "LABELS_EDIT",
+                "LABELS_ASSOCIATION",
+                "CALL",
+                "TYPEBOT_START",
+                "TYPEBOT_CHANGE_STATUS"
+            ]
+        }
     }
     
     try:
