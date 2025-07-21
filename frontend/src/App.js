@@ -382,7 +382,15 @@ function FlowBuilder({ onBackToDashboard, instances, setInstances }) {
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <div className="w-80 bg-white shadow-lg p-4 overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Flow Builder</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Flow Builder</h2>
+          <button
+            onClick={onBackToDashboard}
+            className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm transition-colors"
+          >
+            ← Dashboard
+          </button>
+        </div>
         
         {/* Node Palette */}
         <div className="mb-6">
