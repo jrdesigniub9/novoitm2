@@ -554,6 +554,111 @@ const NodeEditor = ({ node, onUpdate, onFileUpload, uploadProgress }) => {
         </div>
       );
     
+    case 'ai':
+      return (
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700">
+            Modelo IA
+          </label>
+          <select
+            value={data.model || 'gpt-4'}
+            onChange={(e) => handleChange('model', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md"
+          >
+            <option value="gpt-4">GPT-4</option>
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+          </select>
+          
+          <label className="block text-sm font-medium text-gray-700">
+            Prompt Sistema
+          </label>
+          <textarea
+            value={data.prompt || ''}
+            onChange={(e) => handleChange('prompt', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md resize-none"
+            rows={4}
+            placeholder="Digite o prompt para a IA..."
+          />
+          
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="sentiment"
+              checked={data.sentiment || false}
+              onChange={(e) => handleChange('sentiment', e.target.checked)}
+              className="rounded"
+            />
+            <label htmlFor="sentiment" className="text-sm text-gray-700">
+              Ativar análise de sentimento
+            </label>
+          </div>
+        </div>
+      );
+    
+    case 'conditional':
+      return (
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700">
+            Tipo de Condição
+          </label>
+          <select
+            value={data.condition || 'sentiment'}
+            onChange={(e) => handleChange('condition', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md"
+          >
+            <option value="sentiment">Análise de Sentimento</option>
+            <option value="keyword">Palavra-chave</option>
+            <option value="intent">Intenção</option>
+          </select>
+          
+          {data.condition === 'sentiment' && (
+            <>
+              <label className="block text-sm font-medium text-gray-700">
+                Tipo de Sentimento
+              </label>
+              <select
+                value={data.sentimentType || 'negative'}
+                onChange={(e) => handleChange('sentimentType', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              >
+                <option value="negative">Negativo (Desinteresse)</option>
+                <option value="positive">Positivo</option>
+                <option value="neutral">Neutro</option>
+                <option value="confused">Confuso/Dúvidas</option>
+              </select>
+            </>
+          )}
+          
+          {data.condition === 'keyword' && (
+            <>
+              <label className="block text-sm font-medium text-gray-700">
+                Palavras-chave (separadas por vírgula)
+              </label>
+              <input
+                type="text"
+                value={data.keywords || ''}
+                onChange={(e) => handleChange('keywords', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md"
+                placeholder="ex: cancelar, desistir, não quero"
+              />
+            </>
+          )}
+          
+          <label className="block text-sm font-medium text-gray-700">
+            Ação quando condição for verdadeira
+          </label>
+          <select
+            value={data.responseType || 'media'}
+            onChange={(e) => handleChange('responseType', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md"
+          >
+            <option value="media">Enviar Mídia</option>
+            <option value="message">Enviar Mensagem</option>
+            <option value="transfer">Transferir para Humano</option>
+          </select>
+        </div>
+      );
+    
     case 'media':
       return (
         <div className="space-y-3">
