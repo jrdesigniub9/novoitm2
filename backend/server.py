@@ -762,18 +762,88 @@ async def get_ai_settings():
 # Evolution API Instance Management
 @api_router.post("/evolution/instances", response_model=EvolutionInstance)
 async def create_instance(instance_name: str = Form(...)):
-    """Create a new WhatsApp instance"""
-    # Create instance in Evolution API
-    evolution_response = await create_evolution_instance(instance_name)
-    
-    instance = EvolutionInstance(
-        instanceName=instance_name,
-        instanceKey=evolution_response.get("hash", ""),
-        status="created"
-    )
-    
-    await db.evolution_instances.insert_one(instance.dict())
-    return instance
+    """Create a new WhatsApp instance with full Evolution API configuration"""
+    try:
+        # Create instance in Evolution API with all required settings
+        evolution_response = await create_evolution_instance(instance_name)
+        
+        instance = EvolutionInstance(
+            instanceName=instance_name,
+            instanceKey=evolution_response.get("hash", ""),
+            status="created"
+        )
+        
+        await db.evolution_instances.insert_one(instance.dict())
+        logging.info(f"Instance created successfully: {instance_name} with settings: reject_calls=True, ignore_groups=True, always_online=True, webhook_enabled=True")
+        return instance
+        
+    except HTTPException as e:
+        logging.error(f"HTTP error creating instance {instance_name}: {str(e)}")
+        raise e
+    except Exception as e:
+        logging.error(f"Unexpected error creating instance {instance_name}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create instance: {str(e)}")
+
+@api_router.post("/webhook/evolution")
+async def evolution_webhook_handler(request: dict):
+    """Enhanced webhook handler for Evolution API events including MESSAGES_UPSERT"""
+    try:
+        logging.info(f"Received Evolution API webhook: {json.dumps(request, indent=2)}")
+        
+        event = request.get("event")
+        instance_name = request.get("instance")
+        data = request.get("data", {})
+        
+        if event == "qrcode.updated":
+            # Handle QR code updates
+            qr_code = data.get("qrcode", {}).get("base64")
+            if qr_code:
+                await db.evolution_instances.update_one(
+                    {"instanceName": instance_name},
+                    {"$set": {"qrCode": qr_code, "status": "qr_code_ready"}}
+                )
+                logging.info(f"QR code updated for instance: {instance_name}")
+        
+        elif event == "connection.update":
+            # Handle connection status updates  
+            state = data.get("state")
+            if state:
+                await db.evolution_instances.update_one(
+                    {"instanceName": instance_name},
+                    {"$set": {"status": state}}
+                )
+                logging.info(f"Connection status updated for {instance_name}: {state}")
+        
+        elif event == "messages.upsert":
+            # Handle incoming messages - this is critical for the user's requirements
+            messages = data.get("messages", [])
+            for message in messages:
+                if not message.get("key", {}).get("fromMe", False):  # Only process incoming messages
+                    # Extract contact info
+                    contact_number = message.get("key", {}).get("remoteJid", "").split("@")[0]
+                    
+                    # Extract message text
+                    message_text = None
+                    message_content = message.get("message", {})
+                    if "conversation" in message_content:
+                        message_text = message_content["conversation"]
+                    elif "extendedTextMessage" in message_content:
+                        message_text = message_content["extendedTextMessage"].get("text")
+                    elif "textMessage" in message_content:
+                        message_text = message_content["textMessage"].get("text")
+                    
+                    # Only process text messages for now
+                    if message_text and contact_number:
+                        logging.info(f"Processing incoming message from {contact_number}: {message_text}")
+                        
+                        # Process with AI in background to avoid blocking webhook response
+                        asyncio.create_task(process_incoming_message(instance_name, contact_number, message_text))
+        
+        return {"status": "success", "message": "Webhook processed successfully"}
+        
+    except Exception as e:
+        logging.error(f"Error processing Evolution webhook: {str(e)}")
+        return {"status": "error", "message": f"Webhook processing failed: {str(e)}"}
 
 @api_router.get("/evolution/instances")
 async def get_instances():
