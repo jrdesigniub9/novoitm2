@@ -431,7 +431,7 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
   );
 };
 
-function FlowBuilder({ onBackToDashboard, instances, setInstances }) {
+function FlowBuilder({ onBackToDashboard, instances, setInstances, flowToLoad }) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [flows, setFlows] = useState([]);
@@ -450,6 +450,15 @@ function FlowBuilder({ onBackToDashboard, instances, setInstances }) {
     loadInstances();
     loadAISettings();
   }, []);
+
+  // Load specific flow if provided
+  useEffect(() => {
+    if (flowToLoad && flowToLoad.id) {
+      setCurrentFlow(flowToLoad);
+      setNodes(flowToLoad.nodes || []);
+      setEdges(flowToLoad.edges || []);
+    }
+  }, [flowToLoad, setNodes, setEdges]);
 
   const loadFlows = async () => {
     try {
