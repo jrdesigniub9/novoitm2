@@ -895,6 +895,10 @@ async def get_ai_settings():
             # Return default settings
             default_settings = AISettingsModel()
             return default_settings.dict()
+        
+        # Remove MongoDB ObjectId to avoid serialization issues
+        if "_id" in settings:
+            del settings["_id"]
         return settings
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to get settings: {str(e)}")
