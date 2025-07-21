@@ -113,7 +113,7 @@ class AIResponse(BaseModel):
     sessionId: str
     userMessage: str
     aiResponse: str
-    sentiment: Dict[str, float]
+    sentiment: Dict[str, Any]  # Changed from Dict[str, float] to Dict[str, Any]
     triggeredActions: List[str] = []
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
