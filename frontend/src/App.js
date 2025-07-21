@@ -427,8 +427,16 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
                       </div>
                       <div className="flex gap-2">
                         <button
+                          onClick={() => openFlowLogs(flow)}
+                          className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Ver logs e detalhes"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => deleteFlow(flow.id)}
                           className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Excluir fluxo"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
