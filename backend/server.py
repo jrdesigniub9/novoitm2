@@ -185,6 +185,50 @@ async def get_evolution_qr_code(instance_name: str):
         logging.error(f"Unexpected error getting QR code: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get QR code: {str(e)}")
 
+async def get_evolution_instances():
+    """Get all instances from Evolution API"""
+    headers = {"apikey": EVOLUTION_API_KEY}
+    
+    try:
+        response = requests.get(
+            f"{EVOLUTION_API_URL}/instance/fetchInstances",
+            headers=headers
+        )
+        logging.info(f"Evolution API fetch instances response: {response.status_code}")
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            logging.error(f"Evolution API fetchInstances error: {response.text}")
+            return []
+            
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Request failed to Evolution API fetchInstances: {str(e)}")
+        return []
+    except Exception as e:
+        logging.error(f"Unexpected error fetching instances: {str(e)}")
+        return []
+
+async def get_evolution_instance_status(instance_name: str):
+    """Get instance connection status from Evolution API"""
+    headers = {"apikey": EVOLUTION_API_KEY}
+    
+    try:
+        response = requests.get(
+            f"{EVOLUTION_API_URL}/instance/connectionState/{instance_name}",
+            headers=headers
+        )
+        logging.info(f"Evolution API connection status response: {response.status_code}")
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"state": "disconnected"}
+            
+    except Exception as e:
+        logging.error(f"Error getting instance status: {str(e)}")
+        return {"state": "disconnected"}
+
 async def send_evolution_message(instance_name: str, recipient: str, message_data: Dict[str, Any]):
     """Send message through Evolution API"""
     headers = {
