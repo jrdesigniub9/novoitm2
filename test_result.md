@@ -107,15 +107,18 @@ user_problem_statement: "Não está funcionando para criar novas instancias, qua
 backend:
   - task: "Enhanced Evolution API Instance Creation"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "MAJOR ENHANCEMENT: Completely revamped instance creation following official Evolution API documentation. Now includes: (1) Reject Calls configuration (rejectCall: true) (2) Ignore Groups setting (groupsIgnore: true) (3) Always Online feature (alwaysOnline: true) (4) Full webhook configuration with MESSAGES_UPSERT enabled (5) Comprehensive event handling for all Evolution API events (6) Enhanced webhook endpoint /api/webhook/evolution for processing incoming events. Instance creation now properly configures all WhatsApp automation settings as requested by user."
+      - working: true
+        agent: "testing"
+        comment: "✅ ENHANCED EVOLUTION API INSTANCE CREATION - 100% SUCCESS! Conducted comprehensive testing of the newly enhanced Evolution API instance creation system with perfect results: (1) Enhanced Instance Creation API - Successfully created instance 'enhanced_test_1753128080' with comprehensive configuration including rejectCall=true, groupsIgnore=true, alwaysOnline=true (2) Direct Evolution API Verification - Instance found in Evolution API with 'connecting' status (3) Backend Instance Listing - Enhanced instance properly listed with 6 total instances (4) QR Code Generation - Successfully generated base64 QR code for WhatsApp connection (5) Enhanced Webhook Processing - /api/webhook/evolution endpoint operational with MESSAGES_UPSERT event processing. All WhatsApp automation settings properly configured. Fixed missing dependencies (httpx, distro, nltk) during testing. Enhanced Evolution API instance creation is production-ready and fully addresses user's core requirements."
         
   - task: "Fixed Evolution API Integration"
     implemented: true
