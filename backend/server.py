@@ -123,6 +123,48 @@ class AIResponse(BaseModel):
     triggeredActions: List[str] = []
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
+# New Models for Logging System
+class FlowLog(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    flowId: str
+    executionId: str
+    level: str = "info"  # debug, info, warning, error
+    message: str
+    details: Dict[str, Any] = {}
+    nodeId: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class WebhookLog(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str  # "evolution" or "test"
+    event: str
+    payload: Dict[str, Any]
+    headers: Dict[str, str] = {}
+    instanceName: Optional[str] = None
+    processed: bool = False
+    error: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class FlowMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    flowId: str
+    instanceName: str
+    contactNumber: str
+    message: str
+    messageType: str = "text"  # text, image, audio, video, etc.
+    direction: str = "incoming"  # incoming, outgoing
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    processed: bool = False
+    triggerMatch: bool = False
+
+class TestWebhookSettings(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    enabled: bool = True
+    logsEnabled: bool = True
+    webhookUrl: str = ""
+    description: str = "Webhook de teste para desenvolvimento"
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+
 # Evolution API Helper Functions
 async def create_evolution_instance(instance_name: str, webhook_url: str = None):
     """Create a new WhatsApp instance in Evolution API following official documentation with full configuration"""
