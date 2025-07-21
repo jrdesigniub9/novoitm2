@@ -313,11 +313,14 @@ frontend:
     file: "App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
         comment: "Successfully implemented React Flow drag-and-drop interface with custom node types (Trigger, Message, Media, Delay)"
+      - working: true
+        agent: "main"
+        comment: "ENHANCED: Fixed node connection issues by implementing proper React Flow Handle components. Added AI and Conditional node types with proper connection points."
 
   - task: "Node Configuration System"
     implemented: true
@@ -325,11 +328,26 @@ frontend:
     file: "App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
         comment: "Implemented dynamic node editor with different forms for each node type, including file upload for media nodes"
+      - working: true
+        agent: "main"
+        comment: "ENHANCED: Added AI node configuration with prompt settings, model selection, and sentiment analysis options. Added conditional node editor for trigger configuration."
+
+  - task: "AI Settings Interface"
+    implemented: true
+    working: "NA"
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented comprehensive AI settings modal with customizable prompts, sentiment triggers, confidence thresholds, and conversation parameters. Includes real-time configuration updates."
 
   - task: "Instance Management UI"
     implemented: true
