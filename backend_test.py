@@ -582,8 +582,8 @@ class BackendTester:
             self.log_result("Instance Creation with Webhook", False, f"Error: {str(e)}")
             return False
         
-        # Test 2: Flow Creation with Instance Selection
-        print("\n2️⃣ Testing Flow Creation with Instance Selection")
+        # Test 3: Flow Creation with selectedInstance Field
+        print(f"\n3️⃣ Testing Flow Creation with selectedInstance Field")
         try:
             flow_with_instance_data = {
                 "name": "Instance-Specific Marketing Flow",
@@ -626,42 +626,96 @@ class BackendTester:
                 # Verify selectedInstance field is properly saved
                 selected_instance = created_flow.get("selectedInstance")
                 if selected_instance == test_flow_instance:
-                    self.log_result("Flow Creation with Instance Selection", True, 
+                    self.log_result("Flow Creation with selectedInstance", True, 
                                   f"Flow ID: {flow_id}, Selected Instance: {selected_instance}")
                     print(f"   ✅ Flow successfully associated with instance: {selected_instance}")
                 else:
-                    self.log_result("Flow Creation with Instance Selection", False, 
+                    self.log_result("Flow Creation with selectedInstance", False, 
                                   f"selectedInstance field not saved correctly: {selected_instance}")
             else:
-                self.log_result("Flow Creation with Instance Selection", False, 
+                self.log_result("Flow Creation with selectedInstance", False, 
                               f"Status: {response.status_code}, Response: {response.text}")
                 return False
         except Exception as e:
-            self.log_result("Flow Creation with Instance Selection", False, f"Error: {str(e)}")
+            self.log_result("Flow Creation with selectedInstance", False, f"Error: {str(e)}")
             return False
         
-        # Test 3: Flow-Instance Association Verification
-        print("\n3️⃣ Testing Flow-Instance Association")
+        # Test 4: Flow Retrieval with selectedInstance Field
+        print(f"\n4️⃣ Testing Flow Retrieval with selectedInstance Field")
         try:
-            # Get the created flow and verify association
+            # Get the created flow and verify selectedInstance is returned
             response = self.session.get(f"{BACKEND_URL}/flows/{flow_id}")
             if response.status_code == 200:
                 flow = response.json()
                 selected_instance = flow.get("selectedInstance")
                 
                 if selected_instance == test_flow_instance:
-                    self.log_result("Flow-Instance Association", True, 
-                                  f"Flow correctly associated with instance: {selected_instance}")
-                    print(f"   ✅ Flow '{flow['name']}' is associated with instance '{selected_instance}'")
+                    self.log_result("Flow Retrieval with selectedInstance", True, 
+                                  f"Flow correctly returns selectedInstance: {selected_instance}")
+                    print(f"   ✅ Flow '{flow['name']}' returns selectedInstance: '{selected_instance}'")
                     print(f"   ✅ Flow is active: {flow.get('isActive', False)}")
                     print(f"   ✅ Flow has trigger nodes: {len([n for n in flow.get('nodes', []) if n.get('type') == 'trigger'])}")
                 else:
-                    self.log_result("Flow-Instance Association", False, 
-                                  f"Association incorrect: {selected_instance}")
+                    self.log_result("Flow Retrieval with selectedInstance", False, 
+                                  f"selectedInstance not returned correctly: {selected_instance}")
             else:
-                self.log_result("Flow-Instance Association", False, f"Status: {response.status_code}")
+                self.log_result("Flow Retrieval with selectedInstance", False, f"Status: {response.status_code}")
         except Exception as e:
-            self.log_result("Flow-Instance Association", False, f"Error: {str(e)}")
+            self.log_result("Flow Retrieval with selectedInstance", False, f"Error: {str(e)}")
+        
+        # Test 5: Flow Update with selectedInstance Field
+        print(f"\n5️⃣ Testing Flow Update with selectedInstance Field")
+        try:
+            # Create another instance for testing update
+            another_instance = f"update_test_{int(time.time())}"
+            
+            update_data = {
+                "name": "Updated Instance-Specific Flow",
+                "selectedInstance": another_instance,
+                "isActive": True
+            }
+            
+            response = self.session.put(f"{BACKEND_URL}/flows/{flow_id}", json=update_data)
+            if response.status_code == 200:
+                updated_flow = response.json()
+                updated_selected_instance = updated_flow.get("selectedInstance")
+                
+                if updated_selected_instance == another_instance:
+                    self.log_result("Flow Update with selectedInstance", True, 
+                                  f"Flow selectedInstance updated to: {updated_selected_instance}")
+                    print(f"   ✅ Flow selectedInstance successfully updated from '{test_flow_instance}' to '{another_instance}'")
+                else:
+                    self.log_result("Flow Update with selectedInstance", False, 
+                                  f"selectedInstance update failed: {updated_selected_instance}")
+            else:
+                self.log_result("Flow Update with selectedInstance", False, 
+                              f"Status: {response.status_code}, Response: {response.text}")
+        except Exception as e:
+            self.log_result("Flow Update with selectedInstance", False, f"Error: {str(e)}")
+        
+        # Test 6: Flow List with selectedInstance Field
+        print(f"\n6️⃣ Testing Flow List with selectedInstance Field")
+        try:
+            response = self.session.get(f"{BACKEND_URL}/flows")
+            if response.status_code == 200:
+                flows = response.json()
+                flows_with_selected_instance = [f for f in flows if f.get("selectedInstance")]
+                
+                self.log_result("Flow List with selectedInstance", True, 
+                              f"Found {len(flows_with_selected_instance)} flows with selectedInstance out of {len(flows)} total")
+                
+                # Find our test flow
+                test_flow = next((f for f in flows if f.get("id") == flow_id), None)
+                if test_flow and test_flow.get("selectedInstance"):
+                    print(f"   ✅ Test flow found in list with selectedInstance: {test_flow.get('selectedInstance')}")
+                else:
+                    print(f"   ❌ Test flow not found or missing selectedInstance in list")
+            else:
+                self.log_result("Flow List with selectedInstance", False, f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_result("Flow List with selectedInstance", False, f"Error: {str(e)}")
+        
+        return True
         
         # Test 4: Smart Webhook Processing with Instance-Specific Flow Triggering
         print("\n4️⃣ Testing Smart Webhook Processing with Instance-Specific Flow Triggering")
