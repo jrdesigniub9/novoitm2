@@ -165,6 +165,58 @@ class TestWebhookSettings(BaseModel):
     description: str = "Webhook de teste para desenvolvimento"
     createdAt: datetime = Field(default_factory=datetime.utcnow)
 
+# Logging Helper Functions
+async def log_flow_event(flow_id: str, execution_id: str, level: str, message: str, details: Dict[str, Any] = None, node_id: str = None):
+    """Log a flow event"""
+    try:
+        log_entry = FlowLog(
+            flowId=flow_id,
+            executionId=execution_id,
+            level=level,
+            message=message,
+            details=details or {},
+            nodeId=node_id
+        )
+        await db.flow_logs.insert_one(log_entry.dict())
+        logging.info(f"Flow log created: {message}")
+    except Exception as e:
+        logging.error(f"Error creating flow log: {str(e)}")
+
+async def log_webhook_event(event_type: str, event: str, payload: Dict[str, Any], headers: Dict[str, str] = None, instance_name: str = None, processed: bool = False, error: str = None):
+    """Log a webhook event"""
+    try:
+        webhook_log = WebhookLog(
+            type=event_type,
+            event=event,
+            payload=payload,
+            headers=headers or {},
+            instanceName=instance_name,
+            processed=processed,
+            error=error
+        )
+        await db.webhook_logs.insert_one(webhook_log.dict())
+        logging.info(f"Webhook log created: {event}")
+    except Exception as e:
+        logging.error(f"Error creating webhook log: {str(e)}")
+
+async def log_flow_message(flow_id: str, instance_name: str, contact_number: str, message: str, message_type: str = "text", direction: str = "incoming", processed: bool = False, trigger_match: bool = False):
+    """Log a flow message"""
+    try:
+        flow_message = FlowMessage(
+            flowId=flow_id,
+            instanceName=instance_name,
+            contactNumber=contact_number,
+            message=message,
+            messageType=message_type,
+            direction=direction,
+            processed=processed,
+            triggerMatch=trigger_match
+        )
+        await db.flow_messages.insert_one(flow_message.dict())
+        logging.info(f"Flow message logged: {message[:50]}...")
+    except Exception as e:
+        logging.error(f"Error logging flow message: {str(e)}")
+
 # Evolution API Helper Functions
 async def create_evolution_instance(instance_name: str, webhook_url: str = None):
     """Create a new WhatsApp instance in Evolution API following official documentation with full configuration"""
