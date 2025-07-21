@@ -480,6 +480,27 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
           onSave={saveAISettings}
         />
       )}
+
+      {/* Flow Logs Modal */}
+      {showFlowLogsModal && selectedFlowForLogs && (
+        <FlowLogsModal
+          show={showFlowLogsModal}
+          onClose={() => {
+            setShowFlowLogsModal(false);
+            setSelectedFlowForLogs(null);
+          }}
+          flowId={selectedFlowForLogs.id}
+          flowName={selectedFlowForLogs.name}
+        />
+      )}
+
+      {/* Test Webhook Modal */}
+      {showTestWebhookModal && (
+        <TestWebhookModal
+          show={showTestWebhookModal}
+          onClose={() => setShowTestWebhookModal(false)}
+        />
+      )}
     </div>
   );
 };
