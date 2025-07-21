@@ -1426,6 +1426,440 @@ const AISettingsModal = ({ settings, onClose, onSave }) => {
   );
 };
 
+// Flow Logs Modal Component
+const FlowLogsModal = ({ show, onClose, flowId, flowName }) => {
+  const [logs, setLogs] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [executions, setExecutions] = useState([]);
+  const [activeTab, setActiveTab] = useState('logs');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (show && flowId) {
+      loadFlowData();
+    }
+  }, [show, flowId]);
+
+  const loadFlowData = async () => {
+    setLoading(true);
+    try {
+      const [logsRes, messagesRes, executionsRes] = await Promise.all([
+        axios.get(`${API}/flows/${flowId}/logs`),
+        axios.get(`${API}/flows/${flowId}/messages`),
+        axios.get(`${API}/flows/${flowId}/executions`)
+      ]);
+      
+      setLogs(logsRes.data);
+      setMessages(messagesRes.data);
+      setExecutions(executionsRes.data);
+    } catch (error) {
+      console.error('Erro ao carregar dados do fluxo:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTimestamp = (timestamp) => {
+    return new Date(timestamp).toLocaleString('pt-BR');
+  };
+
+  const getLevelColor = (level) => {
+    switch (level) {
+      case 'error': return 'text-red-600 bg-red-50';
+      case 'warning': return 'text-yellow-600 bg-yellow-50';
+      case 'info': return 'text-blue-600 bg-blue-50';
+      case 'debug': return 'text-gray-600 bg-gray-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg w-full max-w-6xl h-5/6 flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b">
+          <div>
+            <h2 className="text-xl font-semibold">Logs e Detalhes</h2>
+            <p className="text-gray-600">{flowName}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="border-b">
+          <nav className="flex space-x-8 px-6">
+            {['logs', 'messages', 'executions'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab === 'logs' && (
+                  <>
+                    <FileText size={16} className="inline mr-2" />
+                    Logs ({logs.length})
+                  </>
+                )}
+                {tab === 'messages' && (
+                  <>
+                    <MessageSquare size={16} className="inline mr-2" />
+                    Mensagens ({messages.length})
+                  </>
+                )}
+                {tab === 'executions' && (
+                  <>
+                    <Activity size={16} className="inline mr-2" />
+                    Execuções ({executions.length})
+                  </>
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="flex-1 overflow-auto p-6">
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <RefreshCw className="animate-spin text-blue-500 mr-2" />
+              Carregando...
+            </div>
+          ) : (
+            <>
+              {activeTab === 'logs' && (
+                <div className="space-y-3">
+                  {logs.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">Nenhum log encontrado</p>
+                  ) : (
+                    logs.map((log, index) => (
+                      <div key={index} className={`p-4 rounded-lg border ${getLevelColor(log.level)}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-sm uppercase">{log.level}</span>
+                          <span className="text-xs text-gray-500">{formatTimestamp(log.timestamp)}</span>
+                        </div>
+                        <p className="text-sm mb-2">{log.message}</p>
+                        {log.nodeId && (
+                          <p className="text-xs text-gray-600">Nó: {log.nodeId}</p>
+                        )}
+                        {Object.keys(log.details || {}).length > 0 && (
+                          <details className="mt-2">
+                            <summary className="text-xs text-gray-600 cursor-pointer">Ver detalhes</summary>
+                            <pre className="mt-2 text-xs bg-gray-50 p-2 rounded overflow-x-auto">
+                              {JSON.stringify(log.details, null, 2)}
+                            </pre>
+                          </details>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'messages' && (
+                <div className="space-y-3">
+                  {messages.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">Nenhuma mensagem encontrada</p>
+                  ) : (
+                    messages.map((message, index) => (
+                      <div key={index} className={`p-4 rounded-lg border ${
+                        message.direction === 'incoming' ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-1 text-xs rounded ${
+                              message.direction === 'incoming' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {message.direction === 'incoming' ? 'Recebida' : 'Enviada'}
+                            </span>
+                            <span className="text-xs text-gray-600">{message.messageType}</span>
+                          </div>
+                          <span className="text-xs text-gray-500">{formatTimestamp(message.timestamp)}</span>
+                        </div>
+                        <p className="text-sm mb-2">{message.message}</p>
+                        <p className="text-xs text-gray-600">
+                          Contato: {message.contactNumber} | Instância: {message.instanceName}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'executions' && (
+                <div className="space-y-3">
+                  {executions.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">Nenhuma execução encontrada</p>
+                  ) : (
+                    executions.map((execution, index) => (
+                      <div key={index} className="p-4 rounded-lg border bg-gray-50">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-1 text-xs rounded ${
+                              execution.status === 'completed' ? 'bg-green-100 text-green-700' :
+                              execution.status === 'failed' ? 'bg-red-100 text-red-700' :
+                              'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              {execution.status}
+                            </span>
+                            <span className="text-xs text-gray-600">ID: {execution.id.substring(0, 8)}</span>
+                          </div>
+                          <span className="text-xs text-gray-500">{formatTimestamp(execution.startedAt)}</span>
+                        </div>
+                        {execution.log && execution.log.length > 0 && (
+                          <details>
+                            <summary className="text-xs text-gray-600 cursor-pointer mb-2">
+                              Ver logs da execução ({execution.log.length} entradas)
+                            </summary>
+                            <div className="space-y-2">
+                              {execution.log.map((logEntry, logIndex) => (
+                                <div key={logIndex} className="text-xs bg-white p-2 rounded border-l-2 border-gray-300">
+                                  <div className="flex justify-between">
+                                    <span>{logEntry.nodeType || 'Sistema'}</span>
+                                    <span className="text-gray-500">{formatTimestamp(logEntry.timestamp)}</span>
+                                  </div>
+                                  {logEntry.error && <p className="text-red-600 mt-1">Erro: {logEntry.error}</p>}
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="p-6 border-t">
+          <button
+            onClick={loadFlowData}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mr-4"
+          >
+            <RefreshCw size={16} className="inline mr-2" />
+            Atualizar
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Test Webhook Modal Component
+const TestWebhookModal = ({ show, onClose }) => {
+  const [settings, setSettings] = useState({});
+  const [logs, setLogs] = useState([]);
+  const [testPayload, setTestPayload] = useState('{\n  "test": "message",\n  "data": {\n    "user": "test"\n  }\n}');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (show) {
+      loadWebhookData();
+    }
+  }, [show]);
+
+  const loadWebhookData = async () => {
+    setLoading(true);
+    try {
+      const [settingsRes, logsRes] = await Promise.all([
+        axios.get(`${API}/test-webhook/settings`),
+        axios.get(`${API}/test-webhook/logs`)
+      ]);
+      
+      setSettings(settingsRes.data);
+      setLogs(logsRes.data);
+    } catch (error) {
+      console.error('Erro ao carregar dados do webhook:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateSettings = async (key, value) => {
+    try {
+      const response = await axios.put(`${API}/test-webhook/settings`, {
+        [key]: value
+      });
+      setSettings(response.data);
+    } catch (error) {
+      console.error('Erro ao atualizar configurações:', error);
+    }
+  };
+
+  const sendTestWebhook = async () => {
+    try {
+      const payload = JSON.parse(testPayload);
+      await axios.post(`${API}/test-webhook`, payload);
+      loadWebhookData(); // Refresh logs
+      alert('Webhook de teste enviado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao enviar webhook de teste:', error);
+      alert('Erro ao enviar webhook: ' + error.message);
+    }
+  };
+
+  const formatTimestamp = (timestamp) => {
+    return new Date(timestamp).toLocaleString('pt-BR');
+  };
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg w-full max-w-6xl h-5/6 flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b">
+          <div>
+            <h2 className="text-xl font-semibold">Webhook de Teste</h2>
+            <p className="text-gray-600">Configure e teste webhooks</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-auto p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Configurações */}
+            <div>
+              <h3 className="text-lg font-medium mb-4">Configurações</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <label className="font-medium">Webhook Habilitado</label>
+                    <p className="text-sm text-gray-600">Ativar/desativar webhook de teste</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={settings.enabled || false}
+                      onChange={(e) => updateSettings('enabled', e.target.checked)}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <label className="font-medium">Logs Habilitados</label>
+                    <p className="text-sm text-gray-600">Salvar logs das requisições</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={settings.logsEnabled || false}
+                      onChange={(e) => updateSettings('logs_enabled', e.target.checked)}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <label className="font-medium">URL do Webhook</label>
+                  <p className="text-sm text-gray-600 mb-2">Use esta URL para testes:</p>
+                  <div className="bg-white p-2 rounded border text-sm font-mono break-all">
+                    {BACKEND_URL}/api/test-webhook
+                  </div>
+                </div>
+
+                {/* Test Payload */}
+                <div>
+                  <label className="block font-medium mb-2">Payload de Teste</label>
+                  <textarea
+                    value={testPayload}
+                    onChange={(e) => setTestPayload(e.target.value)}
+                    className="w-full h-32 p-3 border rounded-lg font-mono text-sm"
+                    placeholder="Digite o JSON de teste..."
+                  />
+                  <button
+                    onClick={sendTestWebhook}
+                    className="mt-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  >
+                    <Zap size={16} className="inline mr-2" />
+                    Enviar Teste
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Logs */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Logs de Requisições ({logs.length})</h3>
+                <button
+                  onClick={loadWebhookData}
+                  className="px-3 py-1 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
+                >
+                  <RefreshCw size={14} className="inline mr-1" />
+                  Atualizar
+                </button>
+              </div>
+              
+              <div className="space-y-3 max-h-96 overflow-auto">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <RefreshCw className="animate-spin text-blue-500 mr-2" />
+                    Carregando...
+                  </div>
+                ) : logs.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">Nenhum log encontrado</p>
+                ) : (
+                  logs.map((log, index) => (
+                    <div key={index} className="p-4 bg-gray-50 rounded-lg border">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-sm">{log.event}</span>
+                        <span className="text-xs text-gray-500">{formatTimestamp(log.timestamp)}</span>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-2">
+                        Status: {log.processed ? 'Processado' : 'Pendente'}
+                        {log.error && <span className="text-red-600 ml-2">• Erro: {log.error}</span>}
+                      </div>
+                      <details>
+                        <summary className="text-xs text-gray-600 cursor-pointer">Ver Payload</summary>
+                        <pre className="mt-2 text-xs bg-white p-2 rounded border overflow-x-auto">
+                          {JSON.stringify(log.payload, null, 2)}
+                        </pre>
+                      </details>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 border-t">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' or 'flowbuilder'
   const [instances, setInstances] = useState([]);
