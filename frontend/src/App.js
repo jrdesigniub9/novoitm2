@@ -1217,9 +1217,7 @@ const AISettingsModal = ({ settings, onClose, onSave }) => {
     enableSentimentAnalysis: true,
     enableAutoResponse: true,
     confidenceThreshold: 0.5,
-    maxContextMessages: 5,
-    disinterestTriggers: [],
-    doubtTriggers: []
+    maxContextMessages: 5
   });
 
   useEffect(() => {
@@ -1229,20 +1227,13 @@ const AISettingsModal = ({ settings, onClose, onSave }) => {
         enableSentimentAnalysis: settings.enableSentimentAnalysis !== false,
         enableAutoResponse: settings.enableAutoResponse !== false,
         confidenceThreshold: settings.confidenceThreshold || 0.5,
-        maxContextMessages: settings.maxContextMessages || 5,
-        disinterestTriggers: settings.disinterestTriggers || ["não quero", "desistir", "cancelar", "chato", "pare"],
-        doubtTriggers: settings.doubtTriggers || ["dúvida", "não entendi", "confuso", "como", "o que", "por que"]
+        maxContextMessages: settings.maxContextMessages || 5
       });
     }
   }, [settings]);
 
   const handleChange = (key, value) => {
     setFormData(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleArrayChange = (key, value) => {
-    const array = value.split(',').map(item => item.trim()).filter(item => item);
-    setFormData(prev => ({ ...prev, [key]: array }));
   };
 
   const handleSave = () => {
@@ -1271,10 +1262,13 @@ const AISettingsModal = ({ settings, onClose, onSave }) => {
               rows={4}
               placeholder="Digite o prompt que a IA deve usar por padrão..."
             />
+            <div className="text-xs text-gray-500 mt-1">
+              Este prompt será usado como base para todas as interações da IA
+            </div>
           </div>
 
           {/* Switches */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -1339,37 +1333,17 @@ const AISettingsModal = ({ settings, onClose, onSave }) => {
             </div>
           </div>
 
-          {/* Disinterest Triggers */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Palavras que Indicam Desinteresse
-            </label>
-            <input
-              type="text"
-              value={formData.disinterestTriggers.join(', ')}
-              onChange={(e) => handleArrayChange('disinterestTriggers', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
-              placeholder="não quero, desistir, cancelar..."
-            />
-            <div className="text-xs text-gray-500">
-              Separar palavras por vírgula. Quando detectadas, a IA tentará reter o cliente.
-            </div>
-          </div>
-
-          {/* Doubt Triggers */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Palavras que Indicam Dúvidas
-            </label>
-            <input
-              type="text"
-              value={formData.doubtTriggers.join(', ')}
-              onChange={(e) => handleArrayChange('doubtTriggers', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
-              placeholder="dúvida, não entendi, confuso..."
-            />
-            <div className="text-xs text-gray-500">
-              Separar palavras por vírgula. Quando detectadas, a IA enviará conteúdo explicativo.
+          {/* Info about Manual Conditions */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-2">
+              <Zap className="w-5 h-5 text-blue-600 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-medium text-blue-900 mb-1">Condições Personalizadas</h4>
+                <p className="text-xs text-blue-700">
+                  Use os nós de <strong>Condição</strong> no flow builder para criar triggers personalizados. 
+                  Você pode adicionar quantas condições quiser e conectá-las a diferentes ações.
+                </p>
+              </div>
             </div>
           </div>
         </div>
