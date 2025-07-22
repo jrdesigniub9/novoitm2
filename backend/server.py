@@ -523,7 +523,16 @@ async def generate_ai_response(message: str, context: List[Dict[str, Any]] = Non
         
         messages.append({"role": "user", "content": message})
         
-        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        # Get API key from settings or fallback to environment variable
+        api_key = OPENAI_API_KEY  # Default fallback
+        try:
+            ai_settings = await db.ai_settings.find_one({"id": "default"})
+            if ai_settings and ai_settings.get("openaiApiKey"):
+                api_key = ai_settings["openaiApiKey"]
+        except Exception as e:
+            logging.warning(f"Failed to get API key from settings, using default: {str(e)}")
+        
+        client = openai.OpenAI(api_key=api_key)
         
         response = client.chat.completions.create(
             model="gpt-4o-mini",  # Using the faster, cheaper model
