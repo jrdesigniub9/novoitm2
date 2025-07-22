@@ -262,6 +262,23 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
     setShowFlowLogsModal(true);
   };
 
+  const updateAllData = async () => {
+    setIsUpdatingData(true);
+    try {
+      await Promise.all([
+        loadFlows(),
+        loadInstances(),
+        loadAISettings()
+      ]);
+      alert('Dados atualizados com sucesso!');
+    } catch (error) {
+      console.error('Error updating data:', error);
+      alert('Erro ao atualizar dados. Verifique o console para mais detalhes.');
+    } finally {
+      setIsUpdatingData(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
