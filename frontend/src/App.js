@@ -538,6 +538,7 @@ function FlowBuilder({ onBackToDashboard, instances, setInstances, flowToLoad })
       // Novo fluxo - limpar estados
       setCurrentFlow(null);
       setSelectedInstance('');
+      setIsFlowActive(false); // Limpar estado de ativação para novo fluxo
       setNodes(initialNodes);
       setEdges(initialEdges);
     }
