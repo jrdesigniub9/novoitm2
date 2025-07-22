@@ -1150,6 +1150,7 @@ class AISettingsModel(BaseModel):
     enableAutoResponse: bool = True
     confidenceThreshold: float = 0.5
     maxContextMessages: int = 5
+    openaiApiKey: str = ""  # Campo para chave API OpenAI
     disinterestTriggers: List[str] = ["não quero", "desistir", "cancelar", "chato", "pare"]
     doubtTriggers: List[str] = ["dúvida", "não entendi", "confuso", "como", "o que", "por que"]
 
