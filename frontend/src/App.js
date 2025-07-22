@@ -382,11 +382,16 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
             </button>
 
             <button
-              onClick={loadFlows}
-              className="flex flex-col items-center gap-3 p-6 bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 transform hover:scale-105"
+              onClick={updateAllData}
+              disabled={isUpdatingData}
+              className={`flex flex-col items-center gap-3 p-6 rounded-xl transition-all duration-200 transform hover:scale-105 ${
+                isUpdatingData 
+                  ? 'bg-gray-300 cursor-not-allowed' 
+                  : 'bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'
+              } text-white`}
             >
-              <RefreshCw className="w-8 h-8" />
-              <span className="font-medium">Atualizar Dados</span>
+              <RefreshCw className={`w-8 h-8 ${isUpdatingData ? 'animate-spin' : ''}`} />
+              <span className="font-medium">{isUpdatingData ? 'Atualizando...' : 'Atualizar Dados'}</span>
             </button>
 
             <button
