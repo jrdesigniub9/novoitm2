@@ -172,6 +172,7 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
   const [qrCode, setQrCode] = useState(null);
   const [aiSettings, setAiSettings] = useState(null);
   const [isUpdatingData, setIsUpdatingData] = useState(false);
+  const [isClearingLogs, setIsClearingLogs] = useState(false);
 
   useEffect(() => {
     loadFlows();
