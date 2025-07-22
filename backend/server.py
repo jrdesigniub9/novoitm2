@@ -1647,6 +1647,33 @@ async def get_webhook_logs(limit: int = 100, event_type: str = None):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to get webhook logs: {str(e)}")
 
+@api_router.delete("/logs/system/clear")
+async def clear_system_logs():
+    """Clear all system logs (webhook logs, flow logs, and flow messages)"""
+    try:
+        # Count documents before deletion
+        webhook_count = await db.webhook_logs.count_documents({})
+        flow_logs_count = await db.flow_logs.count_documents({})
+        flow_messages_count = await db.flow_messages.count_documents({})
+        
+        # Clear all logs
+        await db.webhook_logs.delete_many({})
+        await db.flow_logs.delete_many({})
+        await db.flow_messages.delete_many({})
+        
+        return {
+            "success": True,
+            "message": "Todos os logs do sistema foram limpos com sucesso",
+            "cleared": {
+                "webhook_logs": webhook_count,
+                "flow_logs": flow_logs_count,
+                "flow_messages": flow_messages_count,
+                "total": webhook_count + flow_logs_count + flow_messages_count
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Falha ao limpar logs do sistema: {str(e)}")
+
 # Test route
 @api_router.get("/")
 async def root():
