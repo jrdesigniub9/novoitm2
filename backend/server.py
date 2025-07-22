@@ -1316,10 +1316,13 @@ async def evolution_webhook_handler(request: dict):
                             )
                     
                     # Check for active flows that should be triggered for this instance
-                    await process_flow_triggers(instance_name, contact_number, message_text)
+                    flows_triggered = await process_flow_triggers(instance_name, contact_number, message_text)
                     
-                    # Also process with AI for intelligent responses
-                    asyncio.create_task(process_incoming_message(instance_name, contact_number, message_text))
+                    # Only process with AI if no flows were triggered (to avoid duplicate responses)
+                    # This prevents the automatic AI from interfering with flow-based responses
+                    # Note: flows_triggered would need to return a boolean indicating if any flow was actually triggered
+                    # For now, we'll comment this out to avoid conflicts with flow-based AI nodes
+                    # asyncio.create_task(process_incoming_message(instance_name, contact_number, message_text))
             
             # Update webhook log as processed
             await db.webhook_logs.update_one(
