@@ -656,6 +656,7 @@ function FlowBuilder({ onBackToDashboard, instances, setInstances, flowToLoad })
       const flow = response.data;
       setCurrentFlow(flow);
       setSelectedInstance(flow.selectedInstance || ''); // Carregar instância selecionada
+      setIsFlowActive(flow.isActive || false); // Carregar estado de ativação
       setNodes(flow.nodes || []);
       setEdges(flow.edges || []);
     } catch (error) {
