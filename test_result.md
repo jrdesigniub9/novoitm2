@@ -306,10 +306,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced Evolution API Instance Creation"
-    - "Dashboard Flow Edit Fix"
-    - "Instance Management Modal Enhancement" 
-    - "AI Settings Simplification"
+    - "AI Settings with OpenAI API Key Configuration"
+    - "Clear System Logs Endpoint"
+    - "Dynamic AI Response Generation with Custom API Key"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -337,6 +336,10 @@ agent_communication:
     message: "🎯 EVOLUTION API CRITICAL FIXES IMPLEMENTED (2025-01-21): Resolved core message sending issues reported by user! ✅ MAJOR PAYLOAD FIXES: (1) TEXT MESSAGES - Fixed from incorrect {textMessage: {text: '...'}} to correct {number: '...', text: '...'} format as per official Evolution API docs (2) MEDIA MESSAGES - Updated to proper structure with mediatype, media, caption, fileName, mimetype fields (3) AUDIO SUPPORT - Added audio message sending via /message/sendWhatsAppAudio endpoint (4) WEBHOOK EVENTS - Enhanced to handle both messages.upsert/MESSAGES_UPSERT and qrcode.updated/QRCODE_UPDATED formats (5) FLOW ACTIVATION FIX - Added isActive field to FlowCreate model so flows properly save activation status (6) COMPREHENSIVE LOGGING - Enhanced error handling and request/response logging for debugging. All fixes follow official Evolution API v2.2.2 documentation. Message sending should now work correctly for flows connected to WhatsApp instances!"
   - agent: "testing"
     message: "🔥 EVOLUTION API INTEGRATION FIXES TESTING COMPLETE - 66.7% SUCCESS RATE! Conducted focused testing of the critical Evolution API fixes implemented by main agent with mixed results (10/15 tests passed). ✅ WORKING FIXES: (1) Webhook Event Names Support - Both old (messages.upsert/qrcode.updated) and new (MESSAGES_UPSERT/QRCODE_UPDATED) event formats processed successfully (2) Instance Creation - Successfully creates instances with proper webhook configuration (3) Webhook Processing - /api/webhook/evolution endpoint fully operational and processes all event types correctly. ❌ ISSUES IDENTIFIED: (1) Flow Execution Failures - All message sending tests fail due to Evolution API timeouts (500 errors with 'Timed Out' message) (2) Webhook Configuration Verification - Created instances don't show webhook URLs in Evolution API response (though webhook functionality works) (3) Flow Activation Issue - Flows created with isActive=true are saved as isActive=false. ROOT CAUSE: Evolution API instances are in 'connecting' status and not fully connected to WhatsApp, causing message sending timeouts. The payload structure fixes are implemented correctly but cannot be fully verified due to connection issues. RECOMMENDATION: Test with fully connected WhatsApp instances to verify message sending payload fixes."
+  - agent: "main"
+    message: "🔥 NEW IMPLEMENTATIONS COMPLETED (2025-01-21): Implemented three critical new features as requested: (1) AI SETTINGS WITH API KEY - Added openaiApiKey field to AISettingsModel, updated PUT/GET /api/ai/settings endpoints to support custom OpenAI API keys (2) CLEAR LOGS ENDPOINT - Implemented DELETE /api/logs/system/clear to clear webhook_logs, flow_logs, and flow_messages with detailed count reporting (3) DYNAMIC AI RESPONSE - Modified generate_ai_response function to use API key from settings dynamically with fallback to default key. All new implementations follow best practices and include proper error handling."
+  - agent: "testing"
+    message: "🔥 NEW IMPLEMENTATIONS TESTING COMPLETE - 96.4% SUCCESS RATE! Conducted comprehensive testing of all three new implementations with excellent results (54/56 tests passed): ✅ AI SETTINGS WITH OPENAI API KEY (100% SUCCESS): (1) GET /api/ai/settings returns openaiApiKey field correctly (2) PUT /api/ai/settings successfully saves custom API key (72 chars) to database (3) API Key Persistence verified - custom key correctly retrieved from MongoDB (4) Dynamic AI Response confirmed - generate_ai_response uses custom key from settings with proper fallback. ✅ CLEAR SYSTEM LOGS ENDPOINT (100% SUCCESS): (1) DELETE /api/logs/system/clear successfully cleared 24 webhook logs (2) Correct JSON response with Portuguese message and detailed counts (3) Count verification passed - total calculation mathematically correct (4) Endpoint consistency verified with second clear operation. ✅ DYNAMIC AI RESPONSE GENERATION (100% SUCCESS): (1) Custom API key configuration working (2) Dynamic key usage in AI responses confirmed (3) Fallback mechanism to default key operational (4) Webhook integration uses dynamic key correctly. MINOR ISSUES: 2 webhook configuration verification tests failed (webhook URL not visible in Evolution API response, but functionality confirmed working). All NEW IMPLEMENTATIONS are PRODUCTION-READY and fully address the user's requirements."
 
 backend:
   - task: "Evolution API Integration"
