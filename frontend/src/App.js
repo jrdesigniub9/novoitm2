@@ -414,13 +414,28 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
               <span className="font-medium">{isUpdatingData ? 'Atualizando...' : 'Atualizar Dados'}</span>
             </button>
 
-            <button
-              onClick={() => window.open(`${API}/webhook/logs`, '_blank')}
-              className="flex flex-col items-center gap-3 p-6 bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-xl hover:from-teal-600 hover:to-teal-700 transition-all duration-200 transform hover:scale-105"
-            >
-              <Activity className="w-8 h-8" />
-              <span className="font-medium">Logs Sistema</span>
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => window.open(`${API}/webhook/logs`, '_blank')}
+                className="flex flex-col items-center gap-3 p-6 bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-xl hover:from-teal-600 hover:to-teal-700 transition-all duration-200 transform hover:scale-105"
+              >
+                <Activity className="w-8 h-8" />
+                <span className="font-medium">Ver Logs</span>
+              </button>
+              
+              <button
+                onClick={clearSystemLogs}
+                disabled={isClearingLogs}
+                className={`flex flex-col items-center gap-2 p-4 rounded-lg transition-all duration-200 ${
+                  isClearingLogs 
+                    ? 'bg-gray-300 cursor-not-allowed' 
+                    : 'bg-red-500 hover:bg-red-600 transform hover:scale-105'
+                } text-white`}
+              >
+                <Trash2 className={`w-5 h-5 ${isClearingLogs ? 'animate-pulse' : ''}`} />
+                <span className="font-medium text-xs">{isClearingLogs ? 'Limpando...' : 'Limpar Logs'}</span>
+              </button>
+            </div>
           </div>
         </div>
 
