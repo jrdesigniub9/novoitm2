@@ -810,6 +810,66 @@ async def execute_flow_from_node(flow: Flow, start_node: FlowNode, recipient: st
                     "file_name": file_name
                 }, current_node.id)
                 
+            elif current_node.type == "ai":
+                # Handle AI node - generate response using AI
+                await log_flow_event(flow.id, execution.id, "info", f"Processando nó de IA", {
+                    "node_id": current_node.id
+                }, current_node.id)
+                
+                try:
+                    # Get AI configuration from node data
+                    prompt = current_node.data.get("prompt", "Você é um assistente útil. Responda de forma clara e objetiva.")
+                    model = current_node.data.get("model", "gpt-4")
+                    
+                    # Get the original message that triggered the flow (we need to pass it through execution context)
+                    # For now, we'll use a generic context - this could be enhanced to pass the actual trigger message
+                    ai_prompt = f"{prompt}\n\nUsuário: Como posso ajudá-lo?\nAssistente:"
+                    
+                    # Generate AI response
+                    openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
+                    response = openai_client.chat.completions.create(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": prompt},
+                            {"role": "user", "content": "Olá! Como posso ajudá-lo?"}
+                        ],
+                        max_tokens=500,
+                        temperature=0.7
+                    )
+                    
+                    ai_response = response.choices[0].message.content.strip()
+                    
+                    # Send AI response
+                    message_data = {
+                        "type": "text",
+                        "content": ai_response
+                    }
+                    
+                    # Log AI response
+                    await log_flow_message(flow.id, instance_name, recipient, ai_response, "text", "outgoing", True)
+                    await send_evolution_message(instance_name, recipient, message_data)
+                    await log_flow_event(flow.id, execution.id, "info", f"Resposta de IA enviada: {ai_response[:50]}...", {
+                        "recipient": recipient,
+                        "ai_model": model,
+                        "response_length": len(ai_response)
+                    }, current_node.id)
+                    
+                except Exception as ai_error:
+                    # If AI fails, send fallback message
+                    fallback_message = "Desculpe, não consegui processar sua mensagem no momento. Pode tentar novamente?"
+                    message_data = {
+                        "type": "text",
+                        "content": fallback_message
+                    }
+                    
+                    await log_flow_event(flow.id, execution.id, "error", f"Erro no nó de IA: {str(ai_error)}", {
+                        "error": str(ai_error),
+                        "fallback_sent": True
+                    }, current_node.id)
+                    
+                    await send_evolution_message(instance_name, recipient, message_data)
+                    await log_flow_message(flow.id, instance_name, recipient, fallback_message, "text", "outgoing", True)
+                
             elif current_node.type == "audio":
                 audio_url = current_node.data.get("audioUrl", "")
                 
