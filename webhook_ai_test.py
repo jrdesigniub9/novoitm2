@@ -8,7 +8,7 @@ import json
 import time
 
 # Configuration
-BACKEND_URL = "https://187c0a07-644e-4020-bd91-a200d3d93fdc.preview.emergentagent.com/api"
+BACKEND_URL = "https://7d1fd1b6-3784-4af6-9714-560c26782aea.preview.emergentagent.com/api"
 TEST_INSTANCE_NAME = "test_instance_ai"
 
 def test_webhook_ai_processing():

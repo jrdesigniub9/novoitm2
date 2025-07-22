@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, Any
 
 # Configuration
-BACKEND_URL = "https://187c0a07-644e-4020-bd91-a200d3d93fdc.preview.emergentagent.com/api"
+BACKEND_URL = "https://7d1fd1b6-3784-4af6-9714-560c26782aea.preview.emergentagent.com/api"
 EVOLUTION_API_URL = "http://apiwhatsapp.maapletech.com.br"
 EVOLUTION_API_KEY = "322683C4C655415CAAFFFE10F7D57E11"
 
@@ -399,7 +399,7 @@ class EvolutionAPIFixesTester:
                 if evo_response.status_code == 200:
                     evo_instances = evo_response.json()
                     webhook_configured = False
-                    expected_webhook_url = "https://187c0a07-644e-4020-bd91-a200d3d93fdc.preview.emergentagent.com/api/webhook/evolution"
+                    expected_webhook_url = "https://7d1fd1b6-3784-4af6-9714-560c26782aea.preview.emergentagent.com/api/webhook/evolution"
                     
                     for evo_inst in evo_instances:
                         if evo_inst.get("name") == webhook_test_instance:
