@@ -105,6 +105,51 @@
 user_problem_statement: "Não está funcionando para criar novas instancias, quando crio não está criando na api evolution, e tambem não está funcionando para gerar o qrcode para conectar, isso é fundamental para funcionamento do sistema, e deve ter uma primeira tela, limpa para criar fluxo para depois que clicar abrir ele, e não uma tela direta no fluxo onde fica como está agora"
 
 backend:
+  - task: "AI Settings with OpenAI API Key Configuration"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTADO: Novo campo openaiApiKey no modelo AISettingsModel para permitir configuração de chave API personalizada. Endpoints PUT /api/ai/settings e GET /api/ai/settings atualizados para suportar o novo campo. Função generate_ai_response modificada para usar chave API das configurações quando disponível, com fallback para chave padrão."
+      - working: true
+        agent: "testing"
+        comment: "✅ AI SETTINGS WITH OPENAI API KEY - 100% SUCCESS! Comprehensive testing of new openaiApiKey field implementation with perfect results: (1) GET /api/ai/settings - Successfully returns openaiApiKey field in response (2) PUT /api/ai/settings - Successfully saves custom API key (72 chars) to database (3) API Key Persistence - Custom API key correctly persisted and retrieved from MongoDB (4) Dynamic AI Response - generate_ai_response function successfully uses custom API key from settings with proper fallback to default key. All new API key functionality is PRODUCTION-READY."
+
+  - task: "Clear System Logs Endpoint"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTADO: Novo endpoint DELETE /api/logs/system/clear para limpar todos os logs do sistema. Endpoint limpa webhook_logs, flow_logs e flow_messages collections e retorna contagem detalhada dos itens removidos. Inclui tratamento de erro e mensagens em português."
+      - working: true
+        agent: "testing"
+        comment: "✅ CLEAR SYSTEM LOGS ENDPOINT - 100% SUCCESS! Comprehensive testing of DELETE /api/logs/system/clear endpoint with excellent results: (1) Log Creation - Successfully created test webhook logs for verification (2) Clear Operation - Successfully cleared 24 webhook logs, 0 flow logs, 0 flow messages (total: 24) (3) Response Structure - Correct JSON response with success flag, Portuguese message, and detailed counts (4) Count Verification - Total count calculation is mathematically correct (5) Consistency - Second clear operation returned valid counts, endpoint is consistently functional. Clear logs endpoint is PRODUCTION-READY."
+
+  - task: "Dynamic AI Response Generation with Custom API Key"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTADO: Função generate_ai_response modificada para buscar chave API das configurações AI (ai_settings collection) dinamicamente. Implementa fallback para OPENAI_API_KEY padrão quando chave personalizada não está configurada. Sistema permite cada usuário configurar sua própria chave OpenAI."
+      - working: true
+        agent: "testing"
+        comment: "✅ DYNAMIC AI RESPONSE GENERATION - 100% SUCCESS! Comprehensive testing of dynamic API key usage in generate_ai_response function with perfect results: (1) Custom Key Configuration - Successfully set custom API key in AI settings (2) Dynamic Key Usage - AI response generation successfully uses custom API key from settings (3) Fallback Mechanism - Proper fallback to default API key when custom key is empty (4) Webhook Integration - Webhook processing correctly uses dynamic API key from settings for AI responses. Dynamic API key system is PRODUCTION-READY and fully functional."
+
   - task: "Enhanced Evolution API Instance Creation"
     implemented: true
     working: true
@@ -122,6 +167,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ WEBHOOK AND INSTANCE SELECTION TESTING COMPLETE - 96.2% SUCCESS RATE! Conducted comprehensive testing of webhook configuration and instance selection functionality with 50/52 tests passed. KEY ACHIEVEMENTS: (1) Webhook Endpoint Fully Operational - /api/webhook/evolution processes MESSAGES_UPSERT events correctly (2) Instance Selection Implementation Working - selectedInstance field properly saved, retrieved, and updated in flows (3) Message Processing Logic Verified - Flow triggers correctly filter by instance, supporting both specific instances and legacy 'any instance' flows (4) Enhanced Instance Creation - Successfully creates instances with proper WhatsApp automation settings (5) QR Code Generation Functional - Base64 QR codes generated successfully. MINOR ISSUES: Evolution API webhook configuration not visible in fetchInstances response (but webhook functionality confirmed working). Core webhook and instance selection features are PRODUCTION-READY."
+      - working: true
+        agent: "testing"
+        comment: "✅ ENHANCED EVOLUTION API INSTANCE CREATION - LATEST TEST RESULTS! Conducted focused testing with excellent results: (1) Enhanced Instance Creation - Successfully created 'enhanced_test_1753147001' with comprehensive WhatsApp automation configuration (2) Direct Evolution API Verification - Instance properly registered with 'connecting' status (3) Backend Instance Listing - All 11 instances properly displayed (4) QR Code Generation - Base64 QR codes generated successfully (5) Enhanced Webhook Processing - /api/webhook/evolution endpoint fully operational. Enhanced Evolution API instance creation system is PRODUCTION-READY."
         
   - task: "Fixed Evolution API Integration"
     implemented: true
@@ -167,6 +215,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ INTERFACE SELEÇÃO DE INSTÂNCIAS WHATSAPP - BACKEND TOTALMENTE FUNCIONAL! Testagem abrangente do backend que suporta a seleção de instâncias WhatsApp por fluxo com 100% de sucesso: (1) Campo selectedInstance - Corretamente salvo, recuperado e atualizado em fluxos (2) CRUD Completo - Criação, leitura, atualização de fluxos com selectedInstance funcionando perfeitamente (3) Processamento de Mensagens Inteligente - Sistema filtra fluxos por instância específica, ativando apenas fluxos conectados à instância correta (4) Compatibilidade Legacy - Fluxos sem instância específica (selectedInstance: null) continuam funcionando com qualquer instância (5) Webhook Processamento - MESSAGES_UPSERT processa mensagens e ativa fluxos baseado na instância que recebeu a mensagem. Backend está PRONTO PARA PRODUÇÃO e suporta completamente a funcionalidade de seleção de instâncias WhatsApp."
+      - working: true
+        agent: "testing"
+        comment: "✅ INSTANCE SELECTION FUNCTIONALITY - LATEST TEST RESULTS! Comprehensive testing with excellent results: (1) Flow Creation with selectedInstance - Successfully created flows with specific instance assignments (2) Flow Retrieval - selectedInstance field correctly returned in API responses (3) Flow Update - selectedInstance field successfully updated (4) Flow List - Flows with selectedInstance properly listed (found 2 flows with selectedInstance out of 4 total). Instance selection functionality is PRODUCTION-READY."
 
   - task: "Webhook Processing"
     implemented: true
@@ -191,6 +242,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ WEBHOOK PROCESSING WITH INSTANCE FILTERING - FULLY OPERATIONAL! Comprehensive testing of enhanced webhook processing with instance-specific flow triggering achieved 100% success rate. KEY FEATURES VERIFIED: (1) MESSAGES_UPSERT Event Processing - Correctly extracts message content and sender information (2) Instance-Specific Flow Triggering - Only activates flows assigned to the specific instance that received the message (3) Legacy Support - Flows without selectedInstance (null) are triggered for any instance (4) Flow Isolation - Messages from different instances correctly trigger only their assigned flows (5) Automatic Flow Execution - Flows execute automatically when triggered by incoming messages. Webhook processing with instance filtering is PRODUCTION-READY and fully supports the user's requirement for each flow to connect to specific WhatsApp accounts."
+      - working: true
+        agent: "testing"
+        comment: "✅ MESSAGE PROCESSING LOGIC WITH INSTANCE FILTERING - LATEST TEST RESULTS! Comprehensive testing with perfect results: (1) Multiple Instance Creation - Successfully created instance_a and instance_b for testing (2) Instance-Specific Flows - Created flows assigned to specific instances and 'any instance' flows (3) Message Processing Tests - Messages sent to Instance A correctly trigger only Instance A flows + Any Instance flows (4) Flow Isolation - Messages to Instance B correctly trigger only Instance B flows + Any Instance flows (5) Legacy Support - Non-existent instance messages trigger only Any Instance flows. Message processing logic with instance filtering is PRODUCTION-READY."
 
 frontend:
   - task: "Dashboard Landing Page"
