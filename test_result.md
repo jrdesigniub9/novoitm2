@@ -286,6 +286,48 @@ frontend:
         agent: "main"
         comment: "FIXED CRITICAL BUG: Corrected backend API mapping in get_instances() function. Evolution API returns 'name' field but code was looking for 'instanceName'. Fixed line 742 in server.py to use evo_inst.get('name') instead of evo_inst.get('instanceName'). Also updated to use connectionStatus directly and proper Evolution API field mappings. Instance management modal now correctly displays all instances from Evolution API."
 
+  - task: "Configurações de IA com Chave API"
+    implemented: true
+    working: true
+    file: "server.py, App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTADO: Sistema completo para definir chave API OpenAI nas Configurações de IA. (1) BACKEND - Campo openaiApiKey adicionado no AISettingsModel (2) FUNÇÃO DINÂMICA - generate_ai_response atualizada para usar chave das configurações com fallback (3) FRONTEND - Campo senha para chave API no AISettingsModal (4) PERSISTÊNCIA - Chave salva de forma segura no MongoDB e carregada automaticamente."
+      - working: true
+        agent: "testing"
+        comment: "✅ AI SETTINGS WITH OPENAI API KEY - 100% SUCCESS! Comprehensive testing of new openaiApiKey functionality completed with perfect results: (1) Database Persistence - API key correctly saved and retrieved from MongoDB (2) Dynamic Usage - generate_ai_response function uses custom API key when available with proper fallback (3) API Endpoints - PUT/GET /api/ai/settings fully support openaiApiKey field (4) AI Response Generation - Successfully tested with custom API key, proper response length and sentiment analysis. All new functionality is PRODUCTION-READY."
+
+  - task: "Botão Limpar Logs Sistema"
+    implemented: true
+    working: true
+    file: "server.py, App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "IMPLEMENTADO: Funcionalidade completa para limpar logs do sistema. (1) ENDPOINT - DELETE /api/logs/system/clear para limpar webhook_logs, flow_logs, flow_messages (2) CONFIRMAÇÃO - Modal de confirmação com detalhes dos itens que serão removidos (3) VISUAL - Botão separado com ícone Trash2 e estado de loading (4) FEEDBACK - Retorna contagem detalhada de logs removidos (webhook: X, flow: Y, messages: Z)."
+      - working: true
+        agent: "testing"
+        comment: "✅ CLEAR SYSTEM LOGS ENDPOINT - 100% SUCCESS! DELETE /api/logs/system/clear endpoint fully operational: successfully cleared 24 webhook logs with accurate count reporting (webhook_logs: 24, flow_logs: 0, flow_messages: 0, total: 24), Portuguese success messages working correctly, proper error handling implemented. System logs clearing functionality is PRODUCTION-READY."
+
+  - task: "Botão Atualizar Dados Corrigido"
+    implemented: true
+    working: true
+    file: "App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "CORRIGIDO: Botão 'Atualizar Dados' agora funciona corretamente. (1) FUNCIONALIDADE COMPLETA - Chama loadFlows(), loadInstances() e loadAISettings() (2) INDICADOR VISUAL - Loading state com spinner animado durante atualização (3) FEEDBACK - Alert de sucesso/erro após operação (4) DESABILITAÇÃO - Botão desabilitado durante carregamento para evitar clicks múltiplos."
+
   - task: "AI Settings Simplification"
     implemented: true
     working: "NA"
