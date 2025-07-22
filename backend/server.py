@@ -1207,57 +1207,59 @@ async def evolution_webhook_handler(request: dict):
         
         elif event == "messages.upsert" or event == "MESSAGES_UPSERT":
             # Handle incoming messages and trigger appropriate flows
-            messages = data.get("messages", [])
-            for message in messages:
-                if not message.get("key", {}).get("fromMe", False):  # Only process incoming messages
-                    # Extract contact info
-                    contact_number = message.get("key", {}).get("remoteJid", "").split("@")[0]
+            # A Evolution API envia o formato real diferente do que esperávamos
+            # A estrutura real é: data = { key: {...}, message: {...}, ... }
+            
+            # Verificar se é uma mensagem que não é nossa (fromMe = false)
+            if not data.get("key", {}).get("fromMe", False):  # Only process incoming messages
+                # Extract contact info
+                contact_number = data.get("key", {}).get("remoteJid", "").split("@")[0]
+                
+                # Extract message text with better support for different message types
+                message_text = None
+                message_content = data.get("message", {})
+                
+                # Check various message formats according to Evolution API structure
+                if "conversation" in message_content:
+                    message_text = message_content["conversation"]
+                elif "extendedTextMessage" in message_content:
+                    message_text = message_content["extendedTextMessage"].get("text")
+                elif "textMessage" in message_content:
+                    message_text = message_content["textMessage"].get("text")
+                elif "imageMessage" in message_content:
+                    message_text = message_content["imageMessage"].get("caption", "[Imagem recebida]")
+                elif "videoMessage" in message_content:
+                    message_text = message_content["videoMessage"].get("caption", "[Vídeo recebido]")
+                elif "audioMessage" in message_content:
+                    message_text = "[Áudio recebido]"
+                elif "documentMessage" in message_content:
+                    message_text = f"[Documento recebido: {message_content['documentMessage'].get('fileName', 'arquivo')}]"
+                
+                if message_text and contact_number:
+                    logging.info(f"Processing incoming message from {contact_number} on instance {instance_name}: {message_text}")
                     
-                    # Extract message text with better support for different message types
-                    message_text = None
-                    message_content = message.get("message", {})
+                    # Log incoming message to flow messages (will be associated with flows later)
+                    flows = await db.flows.find({"isActive": True}).to_list(1000)
+                    for flow in flows:
+                        flow_obj = Flow(**flow)
+                        # Check if this flow should handle this instance
+                        if not flow_obj.selectedInstance or flow_obj.selectedInstance == instance_name:
+                            await log_flow_message(
+                                flow_id=flow_obj.id,
+                                instance_name=instance_name,
+                                contact_number=contact_number,
+                                message=message_text,
+                                message_type="text",
+                                direction="incoming",
+                                processed=False,
+                                trigger_match=False
+                            )
                     
-                    # Check various message formats according to Evolution API structure
-                    if "conversation" in message_content:
-                        message_text = message_content["conversation"]
-                    elif "extendedTextMessage" in message_content:
-                        message_text = message_content["extendedTextMessage"].get("text")
-                    elif "textMessage" in message_content:
-                        message_text = message_content["textMessage"].get("text")
-                    elif "imageMessage" in message_content:
-                        message_text = message_content["imageMessage"].get("caption", "[Imagem recebida]")
-                    elif "videoMessage" in message_content:
-                        message_text = message_content["videoMessage"].get("caption", "[Vídeo recebido]")
-                    elif "audioMessage" in message_content:
-                        message_text = "[Áudio recebido]"
-                    elif "documentMessage" in message_content:
-                        message_text = f"[Documento recebido: {message_content['documentMessage'].get('fileName', 'arquivo')}]"
+                    # Check for active flows that should be triggered for this instance
+                    await process_flow_triggers(instance_name, contact_number, message_text)
                     
-                    if message_text and contact_number:
-                        logging.info(f"Processing incoming message from {contact_number} on instance {instance_name}: {message_text}")
-                        
-                        # Log incoming message to flow messages (will be associated with flows later)
-                        flows = await db.flows.find({"isActive": True}).to_list(1000)
-                        for flow in flows:
-                            flow_obj = Flow(**flow)
-                            # Check if this flow should handle this instance
-                            if not flow_obj.selectedInstance or flow_obj.selectedInstance == instance_name:
-                                await log_flow_message(
-                                    flow_id=flow_obj.id,
-                                    instance_name=instance_name,
-                                    contact_number=contact_number,
-                                    message=message_text,
-                                    message_type="text",
-                                    direction="incoming",
-                                    processed=False,
-                                    trigger_match=False
-                                )
-                        
-                        # Check for active flows that should be triggered for this instance
-                        await process_flow_triggers(instance_name, contact_number, message_text)
-                        
-                        # Also process with AI for intelligent responses
-                        asyncio.create_task(process_incoming_message(instance_name, contact_number, message_text))
+                    # Also process with AI for intelligent responses
+                    asyncio.create_task(process_incoming_message(instance_name, contact_number, message_text))
             
             # Update webhook log as processed
             await db.webhook_logs.update_one(
