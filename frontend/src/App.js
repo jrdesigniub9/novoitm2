@@ -1358,7 +1358,8 @@ const AISettingsModal = ({ settings, onClose, onSave }) => {
     enableSentimentAnalysis: true,
     enableAutoResponse: true,
     confidenceThreshold: 0.5,
-    maxContextMessages: 5
+    maxContextMessages: 5,
+    openaiApiKey: ''
   });
 
   useEffect(() => {
@@ -1368,7 +1369,8 @@ const AISettingsModal = ({ settings, onClose, onSave }) => {
         enableSentimentAnalysis: settings.enableSentimentAnalysis !== false,
         enableAutoResponse: settings.enableAutoResponse !== false,
         confidenceThreshold: settings.confidenceThreshold || 0.5,
-        maxContextMessages: settings.maxContextMessages || 5
+        maxContextMessages: settings.maxContextMessages || 5,
+        openaiApiKey: settings.openaiApiKey || ''
       });
     }
   }, [settings]);
