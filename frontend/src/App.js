@@ -280,6 +280,25 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
     }
   };
 
+  const clearSystemLogs = async () => {
+    const confirmClear = window.confirm(
+      'Tem certeza de que deseja limpar todos os logs do sistema?\n\nEsta ação não pode ser desfeita e irá remover:\n• Logs de Webhook\n• Logs de Fluxos\n• Mensagens de Fluxos'
+    );
+    
+    if (!confirmClear) return;
+
+    setIsClearingLogs(true);
+    try {
+      const response = await axios.delete(`${API}/logs/system/clear`);
+      alert(`Logs limpos com sucesso!\n\nItens removidos:\n• Webhook logs: ${response.data.cleared.webhook_logs}\n• Flow logs: ${response.data.cleared.flow_logs}\n• Flow messages: ${response.data.cleared.flow_messages}\n\nTotal: ${response.data.cleared.total} itens`);
+    } catch (error) {
+      console.error('Error clearing logs:', error);
+      alert('Erro ao limpar logs. Verifique o console para mais detalhes.');
+    } finally {
+      setIsClearingLogs(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
