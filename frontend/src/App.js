@@ -631,6 +631,7 @@ function FlowBuilder({ onBackToDashboard, instances, setInstances, flowToLoad })
       name: currentFlow?.name || `Fluxo ${flows.length + 1}`,
       description: currentFlow?.description || '',
       selectedInstance: selectedInstance || null, // Incluir instância selecionada
+      isActive: isFlowActive, // Incluir estado de ativação
       nodes,
       edges,
     };
