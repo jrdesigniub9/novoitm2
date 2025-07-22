@@ -409,20 +409,29 @@ const Dashboard = ({ onOpenFlowBuilder, instances, setInstances }) => {
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 text-lg">{flow.name}</h3>
                         <p className="text-gray-600 text-sm mt-1">{flow.description || 'Sem descrição'}</p>
-                        {/* Indicador de Instância Conectada */}
-                        <div className="flex items-center gap-2 mt-2">
-                          <Smartphone className="w-4 h-4 text-gray-400" />
-                          <span className="text-xs text-gray-500">
-                            {flow.selectedInstance ? (
-                              <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                                {flow.selectedInstance}
-                              </span>
-                            ) : (
-                              <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                                Qualquer instância
-                              </span>
-                            )}
-                          </span>
+                        {/* Indicador de Instância Conectada e Status */}
+                        <div className="flex items-center gap-4 mt-2">
+                          <div className="flex items-center gap-2">
+                            <Smartphone className="w-4 h-4 text-gray-400" />
+                            <span className="text-xs text-gray-500">
+                              {flow.selectedInstance ? (
+                                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                                  {flow.selectedInstance}
+                                </span>
+                              ) : (
+                                <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                                  Qualquer instância
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                          {/* Status do Fluxo */}
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${flow.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                            <span className={`text-xs font-medium ${flow.isActive ? 'text-green-700' : 'text-red-700'}`}>
+                              {flow.isActive ? 'Ativo' : 'Inativo'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
