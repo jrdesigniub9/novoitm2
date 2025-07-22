@@ -1410,6 +1410,23 @@ const AISettingsModal = ({ settings, onClose, onSave }) => {
             </div>
           </div>
 
+          {/* OpenAI API Key */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Chave API OpenAI
+            </label>
+            <input
+              type="password"
+              value={formData.openaiApiKey}
+              onChange={(e) => handleChange('openaiApiKey', e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-md"
+              placeholder="sk-..."
+            />
+            <div className="text-xs text-gray-500 mt-1">
+              Sua chave de API OpenAI. Deixe em branco para usar a configuração padrão do sistema
+            </div>
+          </div>
+
           {/* Switches */}
           <div className="grid grid-cols-1 gap-4">
             <div className="flex items-center gap-2">
