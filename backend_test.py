@@ -1407,9 +1407,9 @@ class BackendTester:
                 self.log_result(f"Delete Flow {flow_id}", False, f"Error: {str(e)}")
     
     def run_all_tests(self):
-        """Run all backend tests with priority on Webhook Correction and Flow-Instance Integration"""
+        """Run all backend tests with priority on NEW IMPLEMENTATIONS"""
         print("🚀 Starting Comprehensive Backend Testing")
-        print("🎯 PRIORITY: Webhook Correction and Flow-Instance Integration Testing")
+        print("🎯 PRIORITY: Testing NEW IMPLEMENTATIONS - AI Settings with API Key, Clear Logs, Dynamic AI Response")
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Evolution API URL: {EVOLUTION_API_URL}")
         print("=" * 60)
@@ -1418,6 +1418,16 @@ class BackendTester:
         if not self.test_api_health():
             print("❌ API is not accessible. Stopping tests.")
             return
+        
+        # 🔥 NEW IMPLEMENTATION TESTS - HIGHEST PRIORITY
+        print("\n🔥 NEW IMPLEMENTATION TEST 1 - AI Settings with OpenAI API Key")
+        self.test_ai_settings_with_api_key()
+        
+        print("\n🔥 NEW IMPLEMENTATION TEST 2 - Clear System Logs Endpoint")
+        self.test_clear_logs_endpoint()
+        
+        print("\n🔥 NEW IMPLEMENTATION TEST 3 - Dynamic AI Response Generation")
+        self.test_dynamic_ai_response_generation()
         
         # CRITICAL PRIORITY TEST: Webhook Configuration and Instance Selection
         print("\n🔥 CRITICAL PRIORITY TEST - Webhook Configuration and Instance Selection")
@@ -1435,7 +1445,7 @@ class BackendTester:
         self.test_flow_crud_operations()
         self.test_file_upload_system()
         self.test_evolution_api_integration()  # Legacy test for comparison
-        self.test_ai_integration()
+        self.test_ai_integration()  # Legacy AI tests
         self.test_flow_execution_engine()
         self.test_webhook_processing()  # Legacy webhook tests
         
@@ -1455,6 +1465,15 @@ class BackendTester:
         print(f"Passed: {passed_tests}")
         print(f"Failed: {failed_tests}")
         print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+        
+        # Highlight NEW IMPLEMENTATION results
+        new_implementation_tests = [name for name in self.test_results.keys() if any(keyword in name for keyword in ["AI Settings with API Key", "Clear System Logs", "Dynamic AI Response", "Custom API Key", "API Key Persistence"])]
+        if new_implementation_tests:
+            print(f"\n🔥 NEW IMPLEMENTATION RESULTS:")
+            for test_name in new_implementation_tests:
+                result = self.test_results[test_name]
+                status = "✅ PASS" if result["success"] else "❌ FAIL"
+                print(f"  {status} {test_name}")
         
         # Highlight Critical Priority results
         critical_tests = [name for name in self.test_results.keys() if any(keyword in name for keyword in ["Webhook", "Instance Selection", "Flow-Instance", "Smart Webhook", "Enhanced"])]
